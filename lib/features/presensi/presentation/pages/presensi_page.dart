@@ -13,8 +13,10 @@ import '../../../../core/utils/distance.dart';
 import '../../data/datasources/attendance_remote_datasource.dart';
 import '../../data/repositories/attendance_repository_impl.dart';
 import '../../domain/entities/attendance_location_entity.dart';
+import '../../domain/entities/attendance_today_entity.dart';
 import '../../domain/usecases/check_in_usecase.dart';
 import '../../domain/usecases/get_my_location_usecase.dart';
+import '../../domain/usecases/get_today_attendance_usecase.dart';
 import '../widgets/presensi/location_badge.dart';
 
 class PresensiPage extends StatefulWidget {
@@ -27,6 +29,7 @@ class PresensiPage extends StatefulWidget {
 class _PresensiPageState extends State<PresensiPage> {
   late final GetMyLocationUseCase _getMyLocationUseCase;
   late final CheckInUseCase _checkInUseCase;
+  late final GetTodayAttendanceUseCase _getTodayAttendanceUseCase;
   final MapController _mapController = MapController();
 
   bool _isLoadingLocation = true;
@@ -36,6 +39,7 @@ class _PresensiPageState extends State<PresensiPage> {
   AttendanceLocationEntity? _officeLocation;
   Position? _currentPosition;
   File? _capturedPhoto;
+  AttendanceTodayEntity? _todayAttendance;
 
   int? get _distance {
     if (_officeLocation == null || _currentPosition == null) return null;
@@ -52,7 +56,12 @@ class _PresensiPageState extends State<PresensiPage> {
     return _distance! <= _officeLocation!.radiusMeters;
   }
 
-  bool get _canSubmit => _isInRange && _capturedPhoto != null && !_isSubmitting;
+  bool get _hasCheckedInToday =>
+      _todayAttendance?.status == 'checked_in' ||
+          _todayAttendance?.status == 'checked_out';
+
+  bool get _canSubmit =>
+      _isInRange && _capturedPhoto != null && !_isSubmitting && !_hasCheckedInToday;
 
   @override
   void initState() {
@@ -64,6 +73,7 @@ class _PresensiPageState extends State<PresensiPage> {
 
     _getMyLocationUseCase = GetMyLocationUseCase(repository);
     _checkInUseCase = CheckInUseCase(repository);
+    _getTodayAttendanceUseCase = GetTodayAttendanceUseCase(repository);
 
     _init();
   }
@@ -77,10 +87,12 @@ class _PresensiPageState extends State<PresensiPage> {
     try {
       final office = await _getMyLocationUseCase();
       final position = await _resolveCurrentPosition();
+      final todayAttendance = await _getTodayAttendanceUseCase();
 
       setState(() {
         _officeLocation = office;
         _currentPosition = position;
+        _todayAttendance = todayAttendance;
       });
 
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -88,7 +100,6 @@ class _PresensiPageState extends State<PresensiPage> {
           _mapController.move(LatLng(position.latitude, position.longitude), 17);
         }
       });
-
     } on AppException catch (e) {
       setState(() => _errorMessage = e.message);
     } catch (e) {
@@ -147,6 +158,9 @@ class _PresensiPageState extends State<PresensiPage> {
         ),
       );
       setState(() => _capturedPhoto = null);
+
+      final todayAttendance = await _getTodayAttendanceUseCase();
+      setState(() => _todayAttendance = todayAttendance);
     } on AppException catch (e) {
       _showError(e.message);
     } catch (_) {
@@ -160,6 +174,16 @@ class _PresensiPageState extends State<PresensiPage> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message), backgroundColor: Colors.redAccent),
     );
+  }
+
+  String get _submitButtonLabel {
+    if (_isSubmitting) return '';
+    if (_todayAttendance?.status == 'checked_out') return 'Presensi hari ini selesai';
+    if (_todayAttendance?.status == 'checked_in') {
+      return 'Sudah Check In (${_todayAttendance!.checkInTime})';
+    }
+    if (_capturedPhoto == null) return 'Ambil foto dulu';
+    return _isInRange ? 'Check In' : 'Di luar jangkauan';
   }
 
   @override
@@ -288,7 +312,7 @@ class _PresensiPageState extends State<PresensiPage> {
               child: Row(
                 children: [
                   GestureDetector(
-                    onTap: _takePhoto,
+                    onTap: _hasCheckedInToday ? null : _takePhoto,
                     child: Container(
                       width: 64,
                       height: 64,
@@ -297,9 +321,14 @@ class _PresensiPageState extends State<PresensiPage> {
                         borderRadius: BorderRadius.circular(16),
                         image: _capturedPhoto != null
                             ? DecorationImage(image: FileImage(_capturedPhoto!), fit: BoxFit.cover)
-                            : null,
+                            : (_todayAttendance?.checkInPhotoUrl != null
+                            ? DecorationImage(
+                          image: NetworkImage(_todayAttendance!.checkInPhotoUrl!),
+                          fit: BoxFit.cover,
+                        )
+                            : null),
                       ),
-                      child: _capturedPhoto == null
+                      child: (_capturedPhoto == null && _todayAttendance?.checkInPhotoUrl == null)
                           ? const Icon(Icons.camera_alt_rounded, color: Color(0xFF3053B6), size: 28)
                           : null,
                     ),
@@ -320,12 +349,13 @@ class _PresensiPageState extends State<PresensiPage> {
                             ? const SizedBox(
                           width: 22,
                           height: 22,
-                          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2.5,
+                          ),
                         )
                             : Text(
-                          _capturedPhoto == null
-                              ? 'Ambil foto dulu'
-                              : (_isInRange ? 'Check In' : 'Di luar jangkauan'),
+                          _submitButtonLabel,
                           style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
                       ),

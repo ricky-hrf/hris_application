@@ -38,10 +38,16 @@ class ApiClient {
   Future<Map<String, dynamic>> get(
       String path, {
         bool requireAuth = false,
+        Map<String, String>? queryParameters,
       }) async {
     try {
+      var uri = Uri.parse('$baseUrl$path');
+      if (queryParameters != null && queryParameters.isNotEmpty) {
+        uri = uri.replace(queryParameters: queryParameters);
+      }
+
       final response = await _client.get(
-        Uri.parse('$baseUrl$path'),
+        uri,
         headers: await _buildHeaders(requireAuth),
       );
       return _handleResponse(response);
