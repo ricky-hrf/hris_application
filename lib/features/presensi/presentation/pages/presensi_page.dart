@@ -15,6 +15,7 @@ import '../../data/repositories/attendance_repository_impl.dart';
 import '../../domain/entities/attendance_location_entity.dart';
 import '../../domain/entities/attendance_today_entity.dart';
 import '../../domain/usecases/check_in_usecase.dart';
+import '../../domain/usecases/check_out_usecase.dart';
 import '../../domain/usecases/get_my_location_usecase.dart';
 import '../../domain/usecases/get_today_attendance_usecase.dart';
 import '../widgets/presensi/location_badge.dart';
@@ -29,6 +30,7 @@ class PresensiPage extends StatefulWidget {
 class _PresensiPageState extends State<PresensiPage> {
   late final GetMyLocationUseCase _getMyLocationUseCase;
   late final CheckInUseCase _checkInUseCase;
+  late final CheckOutUseCase _checkOutUseCase;
   late final GetTodayAttendanceUseCase _getTodayAttendanceUseCase;
   final MapController _mapController = MapController();
 
@@ -56,12 +58,15 @@ class _PresensiPageState extends State<PresensiPage> {
     return _distance! <= _officeLocation!.radiusMeters;
   }
 
-  bool get _hasCheckedInToday =>
-      _todayAttendance?.status == 'checked_in' ||
-          _todayAttendance?.status == 'checked_out';
+  bool get _isNotCheckedIn => _todayAttendance == null || _todayAttendance?.status == 'not_checked_in';
+  bool get _isCheckedIn => _todayAttendance?.status == 'checked_in';
+  bool get _isCheckedOut => _todayAttendance?.status == 'checked_out';
 
-  bool get _canSubmit =>
-      _isInRange && _capturedPhoto != null && !_isSubmitting && !_hasCheckedInToday;
+  bool get _canSubmit {
+    if (_isSubmitting) return false;
+    if (_isCheckedOut) return false;
+    return _isInRange && _capturedPhoto != null;
+  }
 
   @override
   void initState() {
@@ -73,6 +78,7 @@ class _PresensiPageState extends State<PresensiPage> {
 
     _getMyLocationUseCase = GetMyLocationUseCase(repository);
     _checkInUseCase = CheckInUseCase(repository);
+    _checkOutUseCase = CheckOutUseCase(repository);
     _getTodayAttendanceUseCase = GetTodayAttendanceUseCase(repository);
 
     _init();
@@ -137,34 +143,55 @@ class _PresensiPageState extends State<PresensiPage> {
     }
   }
 
-  Future<void> _handleCheckIn() async {
+  Future<void> _refreshTodayAttendance() async {
+    final todayAttendance = await _getTodayAttendanceUseCase();
+    setState(() => _todayAttendance = todayAttendance);
+  }
+
+  Future<void> _handleSubmit() async {
     if (!_canSubmit || _currentPosition == null) return;
 
     setState(() => _isSubmitting = true);
 
     try {
-      final result = await _checkInUseCase(
-        latitude: _currentPosition!.latitude,
-        longitude: _currentPosition!.longitude,
-        locationId: _officeLocation!.id,
-        photoPath: _capturedPhoto!.path,
-      );
+      if (_isCheckedIn) {
+        final result = await _checkOutUseCase(
+          latitude: _currentPosition!.latitude,
+          longitude: _currentPosition!.longitude,
+          locationId: _officeLocation!.id,
+          photoPath: _capturedPhoto!.path,
+        );
 
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Check-in berhasil (${result.status}) — jarak ${result.distanceMeters}m'),
-          backgroundColor: Colors.green,
-        ),
-      );
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Check-out berhasil — jarak ${result.distanceMeters}m'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } else {
+        final result = await _checkInUseCase(
+          latitude: _currentPosition!.latitude,
+          longitude: _currentPosition!.longitude,
+          locationId: _officeLocation!.id,
+          photoPath: _capturedPhoto!.path,
+        );
+
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Check-in berhasil (${result.status}) — jarak ${result.distanceMeters}m'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+
       setState(() => _capturedPhoto = null);
-
-      final todayAttendance = await _getTodayAttendanceUseCase();
-      setState(() => _todayAttendance = todayAttendance);
+      await _refreshTodayAttendance();
     } on AppException catch (e) {
       _showError(e.message);
     } catch (_) {
-      _showError('Gagal melakukan check-in');
+      _showError(_isCheckedIn ? 'Gagal melakukan check-out' : 'Gagal melakukan check-in');
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
     }
@@ -178,12 +205,21 @@ class _PresensiPageState extends State<PresensiPage> {
 
   String get _submitButtonLabel {
     if (_isSubmitting) return '';
-    if (_todayAttendance?.status == 'checked_out') return 'Presensi hari ini selesai';
-    if (_todayAttendance?.status == 'checked_in') {
-      return 'Sudah Check In (${_todayAttendance!.checkInTime})';
+    if (_isCheckedOut) return 'Presensi hari ini selesai';
+
+    if (_capturedPhoto == null) {
+      return _isCheckedIn ? 'Ambil foto untuk Check Out' : 'Ambil foto dulu';
     }
-    if (_capturedPhoto == null) return 'Ambil foto dulu';
-    return _isInRange ? 'Check In' : 'Di luar jangkauan';
+
+    if (!_isInRange) return 'Di luar jangkauan';
+
+    return _isCheckedIn ? 'Check Out' : 'Check In';
+  }
+
+  String? get _photoPreviewUrl {
+    if (_isCheckedIn) return _todayAttendance?.checkInPhotoUrl;
+    if (_isCheckedOut) return _todayAttendance?.checkInPhotoUrl;
+    return null;
   }
 
   @override
@@ -265,7 +301,6 @@ class _PresensiPageState extends State<PresensiPage> {
             ],
           ),
 
-          // Badge status lokasi
           Positioned(
             top: 12,
             left: 0,
@@ -280,7 +315,6 @@ class _PresensiPageState extends State<PresensiPage> {
             ),
           ),
 
-          // Tombol refresh lokasi
           Positioned(
             bottom: 190,
             right: 16,
@@ -292,7 +326,6 @@ class _PresensiPageState extends State<PresensiPage> {
             ),
           ),
 
-          // Panel bawah: preview foto + tombol kamera + submit
           Positioned(
             left: 0,
             right: 0,
@@ -312,7 +345,7 @@ class _PresensiPageState extends State<PresensiPage> {
               child: Row(
                 children: [
                   GestureDetector(
-                    onTap: _hasCheckedInToday ? null : _takePhoto,
+                    onTap: _isCheckedOut ? null : _takePhoto,
                     child: Container(
                       width: 64,
                       height: 64,
@@ -321,14 +354,14 @@ class _PresensiPageState extends State<PresensiPage> {
                         borderRadius: BorderRadius.circular(16),
                         image: _capturedPhoto != null
                             ? DecorationImage(image: FileImage(_capturedPhoto!), fit: BoxFit.cover)
-                            : (_todayAttendance?.checkInPhotoUrl != null
+                            : (_photoPreviewUrl != null
                             ? DecorationImage(
-                          image: NetworkImage(_todayAttendance!.checkInPhotoUrl!),
+                          image: NetworkImage(_photoPreviewUrl!),
                           fit: BoxFit.cover,
                         )
                             : null),
                       ),
-                      child: (_capturedPhoto == null && _todayAttendance?.checkInPhotoUrl == null)
+                      child: (_capturedPhoto == null && _photoPreviewUrl == null)
                           ? const Icon(Icons.camera_alt_rounded, color: Color(0xFF3053B6), size: 28)
                           : null,
                     ),
@@ -338,9 +371,9 @@ class _PresensiPageState extends State<PresensiPage> {
                     child: SizedBox(
                       height: 52,
                       child: ElevatedButton(
-                        onPressed: _canSubmit ? _handleCheckIn : null,
+                        onPressed: _canSubmit ? _handleSubmit : null,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF0E2DE8),
+                          backgroundColor: _isCheckedIn ? const Color(0xFFE85D04) : const Color(0xFF0E2DE8),
                           foregroundColor: Colors.white,
                           disabledBackgroundColor: Colors.grey.shade300,
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),

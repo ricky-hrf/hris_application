@@ -31,9 +31,10 @@ class DashboardHeader extends StatelessWidget {
             children: [
               CircleAvatar(
                 radius: 28,
-                backgroundImage: AssetImage(
-                  photoUrl ?? 'assets/images/profil.jpg',
-                ),
+                backgroundColor: const Color(0xFFE2E8F0),
+                backgroundImage: photoUrl != null
+                    ? NetworkImage(photoUrl!)
+                    : const AssetImage('assets/images/profil.jpg') as ImageProvider,
               ),
               const SizedBox(width: 16),
               Expanded(

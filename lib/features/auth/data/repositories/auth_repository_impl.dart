@@ -20,6 +20,15 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  Future<UserEntity> getProfile() async {
+    final token = await localDataSource.getToken();
+    if (token == null) {
+      throw Exception('Sesi berakhir, silakan login ulang');
+    }
+    return remoteDataSource.getProfile(token: token);
+  }
+
+  @override
   Future<void> logout() async {
     await localDataSource.clearToken();
   }

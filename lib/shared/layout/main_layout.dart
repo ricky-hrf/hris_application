@@ -5,6 +5,14 @@ import 'package:hris_application/features/presensi/presentation/pages/presensi_p
 import 'package:hris_application/features/leave/presentation/pages/leave_page.dart';
 import 'package:hris_application/features/profile/presentation/pages/profile_page.dart';
 
+import '../../../core/network/api_client.dart';
+import '../../../core/network/api_endpoints.dart';
+import '../../../core/storage/secure_storage_service.dart';
+import '../../../features/auth/data/datasources/auth_local_datasource.dart';
+import '../../../features/auth/data/datasources/auth_remote_datasource.dart';
+import '../../../features/auth/data/repositories/auth_repository_impl.dart';
+import '../../../features/auth/domain/usecases/get_profile_usecase.dart';
+
 class MainLayout extends StatefulWidget {
   const MainLayout({super.key});
 
@@ -14,6 +22,7 @@ class MainLayout extends StatefulWidget {
 
 class _MainLayoutState extends State<MainLayout> {
   int _selectedIndex = 0;
+  String? _profilePhotoUrl;
 
   final List<Widget> _pages = const [
     DashboardPage(),
@@ -23,10 +32,40 @@ class _MainLayoutState extends State<MainLayout> {
     ProfilePage(),
   ];
 
+  @override
+  void initState() {
+    super.initState();
+    _loadProfilePhoto();
+  }
+
+  Future<void> _loadProfilePhoto() async {
+    final storage = SecureStorageService();
+    final client = ApiClient(baseUrl: ApiEndpoints.baseUrl, storage: storage);
+    final authRepository = AuthRepositoryImpl(
+      remoteDataSource: AuthRemoteDataSourceImpl(client),
+      localDataSource: AuthLocalDataSourceImpl(storage),
+    );
+    final getProfileUseCase = GetProfileUseCase(authRepository);
+
+    try {
+      final profile = await getProfileUseCase();
+      if (mounted) setState(() => _profilePhotoUrl = profile.photoUrl);
+    } catch (_) {
+      // biarkan null, fallback ke asset default
+    }
+  }
+
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
     });
+  }
+
+  ImageProvider get _avatarImage {
+    if (_profilePhotoUrl != null) {
+      return NetworkImage(_profilePhotoUrl!);
+    }
+    return const AssetImage('assets/images/profil.jpg');
   }
 
   @override
@@ -70,12 +109,12 @@ class _MainLayoutState extends State<MainLayout> {
             BottomNavigationBarItem(
               icon: CircleAvatar(
                 radius: 12,
-                backgroundImage: const AssetImage('assets/images/profil.jpg'),
+                backgroundImage: _avatarImage,
                 backgroundColor: Colors.grey.shade200,
               ),
               activeIcon: CircleAvatar(
                 radius: 12,
-                backgroundImage: const AssetImage('assets/images/profil.jpg'),
+                backgroundImage: _avatarImage,
                 backgroundColor: Colors.grey.shade200,
                 child: Container(
                   decoration: BoxDecoration(

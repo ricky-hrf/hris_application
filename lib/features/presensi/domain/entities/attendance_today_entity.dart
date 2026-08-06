@@ -5,6 +5,7 @@ class AttendanceTodayEntity {
   final String? checkInTime;
   final String? checkInPhotoUrl;
   final String? checkOutTime;
+  final String? checkOutPhotoUrl;
   final String? attendanceStatus;
 
   const AttendanceTodayEntity({
@@ -14,6 +15,7 @@ class AttendanceTodayEntity {
     this.checkInTime,
     this.checkInPhotoUrl,
     this.checkOutTime,
+    this.checkOutPhotoUrl,
     this.attendanceStatus,
   });
 }

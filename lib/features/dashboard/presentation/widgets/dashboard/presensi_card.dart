@@ -80,18 +80,14 @@ class PresensiCard extends StatelessWidget {
               color: const Color(0xFFD1FAE5),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  'Status: $statusLabel',
-                  style: const TextStyle(
-                    color: Color(0xFF065F46),
-                    fontSize: 24,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
+            child: Text(
+              'Status: $statusLabel',
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: Color(0xFF065F46),
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ],

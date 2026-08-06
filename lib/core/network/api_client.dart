@@ -76,8 +76,6 @@ class ApiClient {
   }
 
   Map<String, dynamic> _handleResponse(http.Response response) {
-    print('STATUS CODE: ${response.statusCode}');
-    print('RAW BODY: ${response.body}');
     Map<String, dynamic> decoded;
     try {
       decoded = jsonDecode(response.body) as Map<String, dynamic>;

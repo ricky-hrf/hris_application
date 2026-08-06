@@ -3,11 +3,19 @@ import '../../../../core/network/api_endpoints.dart';
 import '../models/attendance_location_model.dart';
 import '../models/attendance_today_model.dart';
 import '../models/check_in_result_model.dart';
+import '../models/check_out_result_model.dart';
 
 abstract class AttendanceRemoteDataSource {
   Future<AttendanceLocationModel> getMyLocation();
 
   Future<CheckInResultModel> checkIn({
+    required double latitude,
+    required double longitude,
+    required int locationId,
+    required String photoPath,
+  });
+
+  Future<CheckOutResultModel> checkOut({
     required double latitude,
     required double longitude,
     required int locationId,
@@ -51,6 +59,27 @@ class AttendanceRemoteDataSourceImpl implements AttendanceRemoteDataSource {
       requireAuth: true,
     );
     return CheckInResultModel.fromJson(json['data'] as Map<String, dynamic>);
+  }
+
+  @override
+  Future<CheckOutResultModel> checkOut({
+    required double latitude,
+    required double longitude,
+    required int locationId,
+    required String photoPath,
+  }) async {
+    final json = await client.postMultipart(
+      ApiEndpoints.checkOut,
+      fields: {
+        'latitude': latitude.toString(),
+        'longitude': longitude.toString(),
+        'location_id': locationId.toString(),
+      },
+      filePath: photoPath,
+      fileFieldName: 'photo',
+      requireAuth: true,
+    );
+    return CheckOutResultModel.fromJson(json['data'] as Map<String, dynamic>);
   }
 
   @override

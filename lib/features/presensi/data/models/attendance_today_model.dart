@@ -8,6 +8,7 @@ class AttendanceTodayModel extends AttendanceTodayEntity {
     super.checkInTime,
     super.checkInPhotoUrl,
     super.checkOutTime,
+    super.checkOutPhotoUrl,
     super.attendanceStatus,
   });
 
@@ -19,6 +20,7 @@ class AttendanceTodayModel extends AttendanceTodayEntity {
       checkInTime: json['check_in_time'] as String?,
       checkInPhotoUrl: json['check_in_photo_url'] as String?,
       checkOutTime: json['check_out_time'] as String?,
+      checkOutPhotoUrl: json['check_out_photo_url'] as String?,
       attendanceStatus: json['attendance_status'] as String?,
     );
   }

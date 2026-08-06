@@ -69,8 +69,6 @@ class _LoginPageState extends State<LoginPage> {
     } on AppException catch (e) {
       _showError(e.message);
     } catch (e, stackTrace) {
-      print('LOGIN ERROR: $e');
-      print('STACK TRACE: $stackTrace');
       _showError('Terjadi kesalahan yang tidak diketahui');
     } finally {
       if (mounted) setState(() => _isLoading = false);
