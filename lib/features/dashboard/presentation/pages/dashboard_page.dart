@@ -15,6 +15,7 @@ import '../../../presensi/domain/usecases/get_today_attendance_usecase.dart';
 import '../widgets/dashboard/dashboard_header.dart';
 import '../widgets/dashboard/presensi_card.dart';
 import '../widgets/dashboard/stat_grid.dart';
+import '../../../presensi/domain/usecases/get_attendance_history_usecase.dart';
 
 class DashboardPage extends StatefulWidget {
   final VoidCallback? onNavigateToProfile;
@@ -28,10 +29,15 @@ class DashboardPage extends StatefulWidget {
 class _DashboardPageState extends State<DashboardPage> {
   late final GetTodayAttendanceUseCase _getTodayAttendanceUseCase;
   late final GetProfileUseCase _getProfileUseCase;
+  late final GetAttendanceHistoryUseCase _getAttendanceHistoryUseCase;
 
   bool _isLoading = true;
   AttendanceTodayEntity? _todayAttendance;
   UserEntity? _profile;
+  int _presentCount = 0;
+  int _lateCount = 0;
+  int _earlyLeaveCount = 0;
+  int _incompleteCount = 0;
 
   @override
   void initState() {
@@ -48,26 +54,48 @@ class _DashboardPageState extends State<DashboardPage> {
 
     _getTodayAttendanceUseCase = GetTodayAttendanceUseCase(attendanceRepository);
     _getProfileUseCase = GetProfileUseCase(authRepository);
+    _getAttendanceHistoryUseCase = GetAttendanceHistoryUseCase(attendanceRepository);
 
     _loadData();
   }
+
+  Map<String, int> _statusCounts = {};
 
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
 
     try {
+      final now = DateTime.now();
+      final firstDayOfMonth = DateTime(now.year, now.month, 1);
+      final startDate = firstDayOfMonth.toIso8601String().split('T').first;
+      final endDate = now.toIso8601String().split('T').first;
+
       final results = await Future.wait([
         _getTodayAttendanceUseCase(),
         _getProfileUseCase(),
+        _getAttendanceHistoryUseCase(startDate: startDate, endDate: endDate),
       ]);
 
       if (mounted) {
+        final history = results[2] as List<AttendanceTodayEntity>;
+
+        final counts = <String, int>{};
+        for (final item in history) {
+          if (item.attendanceStatus != null) {
+            counts[item.attendanceStatus!] = (counts[item.attendanceStatus!] ?? 0) + 1;
+          } else if (item.status == 'checked_in') {
+            counts['Belum Checkout'] = (counts['Belum Checkout'] ?? 0) + 1;
+          }
+        }
+
         setState(() {
           _todayAttendance = results[0] as AttendanceTodayEntity?;
           _profile = results[1] as UserEntity;
+          _statusCounts = counts;
         });
       }
     } catch (_) {
+      // biarkan tetap default kalau gagal
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -134,7 +162,7 @@ class _DashboardPageState extends State<DashboardPage> {
                   statusLabel: _statusLabel,
                 ),
                 const SizedBox(height: 16),
-                const StatGrid(present: 0, late: 0, absent: 0, leave: 0),
+                StatGrid(counts: _statusCounts),
                 const SizedBox(height: 24),
               ],
             ),

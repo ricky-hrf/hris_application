@@ -21,6 +21,16 @@ class _HistoryPageState extends State<HistoryPage> {
   bool _isLoading = true;
   String? _errorMessage;
   List<AttendanceTodayEntity> _history = [];
+  DateTime _selectedMonth = DateTime(DateTime.now().year, DateTime.now().month, 1);
+
+  static const List<String> _monthNames = [
+    'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+    'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+  ];
+
+  static const List<String> _dayNames = [
+    'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'
+  ];
 
   @override
   void initState() {
@@ -35,6 +45,26 @@ class _HistoryPageState extends State<HistoryPage> {
     _loadHistory();
   }
 
+  bool get _isCurrentMonth {
+    final now = DateTime.now();
+    return _selectedMonth.year == now.year && _selectedMonth.month == now.month;
+  }
+
+  void _goToPreviousMonth() {
+    setState(() {
+      _selectedMonth = DateTime(_selectedMonth.year, _selectedMonth.month - 1, 1);
+    });
+    _loadHistory();
+  }
+
+  void _goToNextMonth() {
+    if (_isCurrentMonth) return;
+    setState(() {
+      _selectedMonth = DateTime(_selectedMonth.year, _selectedMonth.month + 1, 1);
+    });
+    _loadHistory();
+  }
+
   Future<void> _loadHistory() async {
     setState(() {
       _isLoading = true;
@@ -42,7 +72,14 @@ class _HistoryPageState extends State<HistoryPage> {
     });
 
     try {
-      final data = await _getAttendanceHistoryUseCase();
+      final firstDay = DateTime(_selectedMonth.year, _selectedMonth.month, 1);
+      final lastDay = DateTime(_selectedMonth.year, _selectedMonth.month + 1, 0);
+
+      final data = await _getAttendanceHistoryUseCase(
+        startDate: _formatIso(firstDay),
+        endDate: _formatIso(lastDay),
+      );
+
       if (mounted) setState(() => _history = data);
     } catch (e) {
       if (mounted) setState(() => _errorMessage = 'Gagal memuat riwayat presensi');
@@ -51,14 +88,13 @@ class _HistoryPageState extends State<HistoryPage> {
     }
   }
 
+  String _formatIso(DateTime date) {
+    return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+  }
+
   String _formatDate(String workDate) {
     final date = DateTime.parse(workDate);
-    const days = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
-    const months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
-      'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'
-    ];
-    return '${days[date.weekday - 1]}, ${date.day} ${months[date.month - 1]} ${date.year}';
+    return '${_dayNames[date.weekday - 1]}, ${date.day} ${_monthNames[date.month - 1]} ${date.year}';
   }
 
   Color _statusColor(String status) {
@@ -73,19 +109,7 @@ class _HistoryPageState extends State<HistoryPage> {
   }
 
   String _statusLabel(AttendanceTodayEntity item) {
-    if (item.attendanceStatus != null) return item.attendanceStatus!;
-    if (item.status == 'checked_in') return 'Belum Check Out';
-    if (item.status == 'checked_out') return 'Selesai';
-    return 'Tidak Hadir';
-  }
-
-  Widget _defaultPhotoIcon() {
-    return Container(
-      width: 48,
-      height: 48,
-      color: Colors.grey.shade200,
-      child: Icon(Icons.person_rounded, color: Colors.grey.shade400, size: 28),
-    );
+    return item.attendanceStatus ?? '-';
   }
 
   @override
@@ -95,188 +119,250 @@ class _HistoryPageState extends State<HistoryPage> {
         title: const Text('Riwayat Presensi'),
         elevation: 0,
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _errorMessage != null
-          ? Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                _errorMessage!,
-                textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.redAccent),
+      body: Column(
+        children: [
+          _buildMonthSelector(),
+          Expanded(
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : _errorMessage != null
+                ? Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      _errorMessage!,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(color: Colors.redAccent),
+                    ),
+                    const SizedBox(height: 12),
+                    OutlinedButton(onPressed: _loadHistory, child: const Text('Coba Lagi')),
+                  ],
+                ),
               ),
-              const SizedBox(height: 12),
-              OutlinedButton(onPressed: _loadHistory, child: const Text('Coba Lagi')),
-            ],
-          ),
-        ),
-      )
-          : RefreshIndicator(
-        onRefresh: _loadHistory,
-        child: _history.isEmpty
-            ? ListView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          children: const [
-            SizedBox(height: 120),
-            Center(
-              child: Text(
-                'Belum ada riwayat presensi',
-                style: TextStyle(color: Colors.grey),
+            )
+                : RefreshIndicator(
+              onRefresh: _loadHistory,
+              child: _history.isEmpty
+                  ? ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                children: const [
+                  SizedBox(height: 120),
+                  Center(
+                    child: Text(
+                      'Belum ada riwayat presensi bulan ini',
+                      style: TextStyle(color: Colors.grey),
+                    ),
+                  ),
+                ],
+              )
+                  : ListView.separated(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.all(16),
+                itemCount: _history.length,
+                separatorBuilder: (_, __) => const SizedBox(height: 12),
+                itemBuilder: (context, index) => _HistoryCard(
+                  item: _history[index],
+                  dateLabel: _formatDate(_history[index].workDate),
+                  statusColor: _statusColor(_history[index].status),
+                  statusLabel: _statusLabel(_history[index]),
+                ),
               ),
             ),
-          ],
-        )
-            : ListView.separated(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.all(16),
-          itemCount: _history.length,
-          separatorBuilder: (_, __) => const SizedBox(height: 12),
-          itemBuilder: (context, index) {
-            final item = _history[index];
+          ),
+        ],
+      ),
+    );
+  }
 
-            return Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
-                        child: item.checkInPhotoUrl != null
-                            ? Image.network(
-                          item.checkInPhotoUrl!,
-                          width: 48,
-                          height: 48,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => _defaultPhotoIcon(),
-                        )
-                            : _defaultPhotoIcon(),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              _formatDate(item.workDate),
-                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                            ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: _statusColor(item.status).withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Text(
-                                _statusLabel(item),
-                                style: TextStyle(
-                                  color: _statusColor(item.status),
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _TimeBlock(
-                          icon: Icons.login_rounded,
-                          label: 'Check In',
-                          time: item.checkInTime ?? '--:--',
-                          color: Colors.blue,
-                          photoUrl: item.checkInPhotoUrl,
-                        ),
-                      ),
-                      Expanded(
-                        child: _TimeBlock(
-                          icon: Icons.logout_rounded,
-                          label: 'Check Out',
-                          time: item.checkOutTime ?? '--:--',
-                          color: Colors.indigo,
-                          photoUrl: item.checkOutPhotoUrl,
-                        ),
-                      ),
-                    ],
-                  ),
-                  if (item.shiftName != null) ...[
-                    const SizedBox(height: 8),
-                    Text(
-                      item.shiftName!,
-                      style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-                    ),
-                  ],
-                ],
-              ),
-            );
-          },
-        ),
+  Widget _buildMonthSelector() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 4, offset: const Offset(0, 2)),
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          IconButton(
+            onPressed: _goToPreviousMonth,
+            icon: const Icon(Icons.chevron_left_rounded),
+          ),
+          Text(
+            '${_monthNames[_selectedMonth.month - 1]} ${_selectedMonth.year}',
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+          ),
+          IconButton(
+            onPressed: _isCurrentMonth ? null : _goToNextMonth,
+            icon: const Icon(Icons.chevron_right_rounded),
+          ),
+        ],
       ),
     );
   }
 }
 
-class _TimeBlock extends StatelessWidget {
+class _HistoryCard extends StatelessWidget {
+  final AttendanceTodayEntity item;
+  final String dateLabel;
+  final Color statusColor;
+  final String statusLabel;
+
+  const _HistoryCard({
+    required this.item,
+    required this.dateLabel,
+    required this.statusColor,
+    required this.statusLabel,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Baris 1: hari+tanggal (kiri) & status (kanan)
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Text(
+                  dateLabel,
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: statusColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  statusLabel,
+                  style: TextStyle(
+                    color: statusColor,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          // Baris 2: foto + check in | foto + check out
+          Row(
+            children: [
+              Expanded(
+                child: _PhotoTimeBlock(
+                  photoUrl: item.checkInPhotoUrl,
+                  icon: Icons.login_rounded,
+                  label: 'Check In',
+                  time: item.checkInTime ?? '--:--',
+                  color: Colors.blue,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _PhotoTimeBlock(
+                  photoUrl: item.checkOutPhotoUrl,
+                  icon: Icons.logout_rounded,
+                  label: 'Check Out',
+                  time: item.checkOutTime ?? '--:--',
+                  color: Colors.indigo,
+                ),
+              ),
+            ],
+          ),
+          if (item.shiftName != null) ...[
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Icon(Icons.schedule_rounded, size: 14, color: Colors.grey.shade500),
+                const SizedBox(width: 6),
+                Text(
+                  item.shiftName!,
+                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                ),
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _PhotoTimeBlock extends StatelessWidget {
+  final String? photoUrl;
   final IconData icon;
   final String label;
   final String time;
   final Color color;
-  final String? photoUrl;
 
-  const _TimeBlock({
+  const _PhotoTimeBlock({
+    required this.photoUrl,
     required this.icon,
     required this.label,
     required this.time,
     required this.color,
-    this.photoUrl,
   });
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
-        photoUrl != null
-            ? ClipRRect(
-          borderRadius: BorderRadius.circular(9),
-          child: Image.network(
+        ClipRRect(
+          borderRadius: BorderRadius.circular(10),
+          child: photoUrl != null
+              ? Image.network(
             photoUrl!,
-            width: 18,
-            height: 18,
+            width: 44,
+            height: 44,
             fit: BoxFit.cover,
-            errorBuilder: (_, __, ___) => Icon(icon, size: 18, color: color),
-          ),
-        )
-            : Icon(icon, size: 18, color: color),
+            errorBuilder: (_, __, ___) => _fallbackIcon(),
+          )
+              : _fallbackIcon(),
+        ),
         const SizedBox(width: 8),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(label, style: TextStyle(fontSize: 11, color: Colors.grey.shade500)),
-            Text(time, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-          ],
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(label, style: TextStyle(fontSize: 11, color: Colors.grey.shade500)),
+              Text(
+                time,
+                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+              ),
+            ],
+          ),
         ),
       ],
+    );
+  }
+
+  Widget _fallbackIcon() {
+    return Container(
+      width: 44,
+      height: 44,
+      color: color.withOpacity(0.1),
+      child: Icon(icon, size: 20, color: color),
     );
   }
 }

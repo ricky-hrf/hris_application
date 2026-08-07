@@ -216,12 +216,6 @@ class _PresensiPageState extends State<PresensiPage> {
     return _isCheckedIn ? 'Check Out' : 'Check In';
   }
 
-  String? get _photoPreviewUrl {
-    if (_isCheckedIn) return _todayAttendance?.checkInPhotoUrl;
-    if (_isCheckedOut) return _todayAttendance?.checkInPhotoUrl;
-    return null;
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -354,14 +348,9 @@ class _PresensiPageState extends State<PresensiPage> {
                         borderRadius: BorderRadius.circular(16),
                         image: _capturedPhoto != null
                             ? DecorationImage(image: FileImage(_capturedPhoto!), fit: BoxFit.cover)
-                            : (_photoPreviewUrl != null
-                            ? DecorationImage(
-                          image: NetworkImage(_photoPreviewUrl!),
-                          fit: BoxFit.cover,
-                        )
-                            : null),
+                            : null,
                       ),
-                      child: (_capturedPhoto == null && _photoPreviewUrl == null)
+                      child: _capturedPhoto == null
                           ? const Icon(Icons.camera_alt_rounded, color: Color(0xFF3053B6), size: 28)
                           : null,
                     ),
