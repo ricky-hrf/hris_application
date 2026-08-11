@@ -1,10 +1,7 @@
 class ApiEndpoints {
   ApiEndpoints._();
 
-  // url helper untuk pengembangan di perangkat hp
-  static const String baseUrl = 'http://10.18.13.4:8000/api/v1';
-
-  // static const String baseUrl = 'http://10.0.2.2:8000/api/v1';
+  static const String baseUrl = 'http://10.18.9.122:8000/api/v1';
   static const String logout = '/logout';
   static const String login = '/login';
   static const String profile = '/profile';
@@ -13,4 +10,6 @@ class ApiEndpoints {
   static const String checkOut = '/attendance/check-out';
   static const String attendanceToday = '/attendance/today';
   static const String attendanceHistory = '/attendance/history';
+  static const String leaveTypes = '/leave/leave-types';
+  static const String leaveRequests = '/leave/requests';
 }
