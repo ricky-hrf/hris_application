@@ -32,4 +32,7 @@ class LeaveRepositoryImpl implements LeaveRepository {
 
   @override
   Future<LeaveRequestEntity> getRequestDetail(int id) => remoteDataSource.getRequestDetail(id);
+
+  @override
+  Future<void> cancelLeaveRequest(int id) => remoteDataSource.cancelLeaveRequest(id);
 }

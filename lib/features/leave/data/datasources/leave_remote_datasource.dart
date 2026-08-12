@@ -17,6 +17,8 @@ abstract class LeaveRemoteDataSource {
   Future<List<LeaveRequestModel>> getMyRequests();
 
   Future<LeaveRequestModel> getRequestDetail(int id);
+
+  Future<void> cancelLeaveRequest(int id);
 }
 
 class LeaveRemoteDataSourceImpl implements LeaveRemoteDataSource {
@@ -69,5 +71,10 @@ class LeaveRemoteDataSourceImpl implements LeaveRemoteDataSource {
   Future<LeaveRequestModel> getRequestDetail(int id) async {
     final json = await client.get('${ApiEndpoints.leaveRequests}/$id', requireAuth: true);
     return LeaveRequestModel.fromJson(json['data'] as Map<String, dynamic>);
+  }
+
+  @override
+  Future<void> cancelLeaveRequest(int id) async {
+    await client.post('${ApiEndpoints.leaveRequests}/$id/cancel', requireAuth: true);
   }
 }

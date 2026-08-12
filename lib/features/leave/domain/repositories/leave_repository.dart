@@ -15,4 +15,6 @@ abstract class LeaveRepository {
   Future<List<LeaveRequestEntity>> getMyRequests();
 
   Future<LeaveRequestEntity> getRequestDetail(int id);
+
+  Future<void> cancelLeaveRequest(int id);
 }

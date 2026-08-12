@@ -12,10 +12,15 @@ import '../../../presensi/data/datasources/attendance_remote_datasource.dart';
 import '../../../presensi/data/repositories/attendance_repository_impl.dart';
 import '../../../presensi/domain/entities/attendance_today_entity.dart';
 import '../../../presensi/domain/usecases/get_today_attendance_usecase.dart';
+import '../../../presensi/domain/usecases/get_attendance_history_usecase.dart';
+import '../../../leave/data/datasources/leave_remote_datasource.dart';
+import '../../../leave/data/repositories/leave_repository_impl.dart';
+import '../../../leave/domain/entities/leave_request_entity.dart';
+import '../../../leave/domain/usecases/get_my_leave_requests_usecase.dart';
 import '../widgets/dashboard/dashboard_header.dart';
 import '../widgets/dashboard/presensi_card.dart';
 import '../widgets/dashboard/stat_grid.dart';
-import '../../../presensi/domain/usecases/get_attendance_history_usecase.dart';
+import '../widgets/dashboard/leave_status_card.dart';
 
 class DashboardPage extends StatefulWidget {
   final VoidCallback? onNavigateToProfile;
@@ -30,14 +35,15 @@ class _DashboardPageState extends State<DashboardPage> {
   late final GetTodayAttendanceUseCase _getTodayAttendanceUseCase;
   late final GetProfileUseCase _getProfileUseCase;
   late final GetAttendanceHistoryUseCase _getAttendanceHistoryUseCase;
+  late final GetMyLeaveRequestsUseCase _getMyLeaveRequestsUseCase;
 
   bool _isLoading = true;
   AttendanceTodayEntity? _todayAttendance;
   UserEntity? _profile;
-  int _presentCount = 0;
-  int _lateCount = 0;
-  int _earlyLeaveCount = 0;
-  int _incompleteCount = 0;
+  LeaveRequestEntity? _ongoingLeave;
+  Map<String, int> _statusCounts = {};
+
+  static const _ongoingLeaveStatuses = ['pending_supervisor', 'pending_hr'];
 
   @override
   void initState() {
@@ -51,15 +57,15 @@ class _DashboardPageState extends State<DashboardPage> {
       remoteDataSource: AuthRemoteDataSourceImpl(client),
       localDataSource: AuthLocalDataSourceImpl(storage),
     );
+    final leaveRepository = LeaveRepositoryImpl(LeaveRemoteDataSourceImpl(client));
 
     _getTodayAttendanceUseCase = GetTodayAttendanceUseCase(attendanceRepository);
     _getProfileUseCase = GetProfileUseCase(authRepository);
     _getAttendanceHistoryUseCase = GetAttendanceHistoryUseCase(attendanceRepository);
+    _getMyLeaveRequestsUseCase = GetMyLeaveRequestsUseCase(leaveRepository);
 
     _loadData();
   }
-
-  Map<String, int> _statusCounts = {};
 
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
@@ -74,10 +80,12 @@ class _DashboardPageState extends State<DashboardPage> {
         _getTodayAttendanceUseCase(),
         _getProfileUseCase(),
         _getAttendanceHistoryUseCase(startDate: startDate, endDate: endDate),
+        _getMyLeaveRequestsUseCase(),
       ]);
 
       if (mounted) {
         final history = results[2] as List<AttendanceTodayEntity>;
+        final leaveRequests = results[3] as List<LeaveRequestEntity>;
 
         final counts = <String, int>{};
         for (final item in history) {
@@ -88,10 +96,19 @@ class _DashboardPageState extends State<DashboardPage> {
           }
         }
 
+        LeaveRequestEntity? ongoing;
+        for (final req in leaveRequests) {
+          if (_ongoingLeaveStatuses.contains(req.status)) {
+            ongoing = req;
+            break;
+          }
+        }
+
         setState(() {
           _todayAttendance = results[0] as AttendanceTodayEntity?;
           _profile = results[1] as UserEntity;
           _statusCounts = counts;
+          _ongoingLeave = ongoing;
         });
       }
     } catch (_) {
@@ -123,6 +140,17 @@ class _DashboardPageState extends State<DashboardPage> {
     return 'Belum Presensi';
   }
 
+  String _leaveStatusLabel(String status) {
+    switch (status) {
+      case 'pending_supervisor':
+        return 'Menunggu Atasan';
+      case 'pending_hr':
+        return 'Menunggu HRD';
+      default:
+        return status;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -132,7 +160,7 @@ class _DashboardPageState extends State<DashboardPage> {
       ),
       decoration: const BoxDecoration(
         gradient: LinearGradient(
-          colors: [Color(0xFF0A1E9C), Color(0xFF3395F1)],
+          colors: [Color(0xFFD7E2E7), Color(0xFFF9F9FB)],
           begin: Alignment.bottomRight,
           end: Alignment.topLeft,
         ),
@@ -161,6 +189,15 @@ class _DashboardPageState extends State<DashboardPage> {
                   clockOutTime: _todayAttendance?.checkOutTime ?? '--:--',
                   statusLabel: _statusLabel,
                 ),
+                if (!_isLoading && _ongoingLeave != null) ...[
+                  const SizedBox(height: 16),
+                  LeaveStatusCard(
+                    leaveTypeName: _ongoingLeave!.leaveTypeName,
+                    startDate: _ongoingLeave!.startDate,
+                    endDate: _ongoingLeave!.endDate,
+                    statusLabel: _leaveStatusLabel(_ongoingLeave!.status),
+                  ),
+                ],
                 const SizedBox(height: 16),
                 StatGrid(counts: _statusCounts),
                 const SizedBox(height: 24),
