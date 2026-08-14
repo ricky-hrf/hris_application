@@ -32,6 +32,9 @@ class _MainLayoutState extends State<MainLayout> {
     ProfilePage(),
   ];
 
+  static const _primaryColor = Color(0xFF0F5C48);
+  static const _accentColor = Color(0xFFA9C23F);
+
   @override
   void initState() {
     super.initState();
@@ -68,6 +71,74 @@ class _MainLayoutState extends State<MainLayout> {
     return const AssetImage('assets/images/profil.jpg');
   }
 
+  Widget _buildNavItem({
+    required IconData icon,
+    required String label,
+    required int index,
+  }) {
+    final isSelected = _selectedIndex == index;
+    return Expanded(
+      child: InkWell(
+        onTap: () => _onItemTapped(index),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
+              size: 26,
+              color: isSelected ? _primaryColor : Colors.grey.shade400,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                color: isSelected ? _primaryColor : Colors.grey.shade400,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProfileItem() {
+    final isSelected = _selectedIndex == 4;
+    return Expanded(
+      child: InkWell(
+        onTap: () => _onItemTapped(4),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircleAvatar(
+              radius: 13,
+              backgroundImage: _avatarImage,
+              backgroundColor: Colors.grey.shade200,
+              child: isSelected
+                  ? Container(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(color: _primaryColor, width: 2),
+                ),
+              )
+                  : null,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Profile',
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                color: isSelected ? _primaryColor : Colors.grey.shade400,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -75,58 +146,76 @@ class _MainLayoutState extends State<MainLayout> {
         index: _selectedIndex,
         children: _pages,
       ),
-      bottomNavigationBar: SizedBox(
-        height: 100,
-        child: BottomNavigationBar(
-          currentIndex: _selectedIndex,
-          onTap: _onItemTapped,
-          type: BottomNavigationBarType.fixed,
-          backgroundColor: Colors.white,
-          selectedItemColor: const Color(0xFF3053B6),
-          unselectedItemColor: Colors.grey,
-          showUnselectedLabels: true,
-          elevation: 12,
-          iconSize: 32,
-          selectedFontSize: 14,
-          unselectedFontSize: 11,
-          items: [
-            const BottomNavigationBarItem(
-              icon: Icon(Icons.home_rounded),
-              label: 'Home',
-            ),
-            const BottomNavigationBarItem(
-              icon: Icon(Icons.history_rounded),
-              label: 'History',
-            ),
-            const BottomNavigationBarItem(
-              icon: Icon(Icons.fingerprint_rounded),
-              label: 'Presensi',
-            ),
-            const BottomNavigationBarItem(
-              icon: Icon(Icons.event_busy_rounded),
-              label: 'Leave',
-            ),
-            BottomNavigationBarItem(
-              icon: CircleAvatar(
-                radius: 12,
-                backgroundImage: _avatarImage,
-                backgroundColor: Colors.grey.shade200,
-              ),
-              activeIcon: CircleAvatar(
-                radius: 12,
-                backgroundImage: _avatarImage,
-                backgroundColor: Colors.grey.shade200,
-                child: Container(
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(color: const Color(0xFF0E2DE8), width: 2),
-                  ),
+      backgroundColor: Colors.white,
+      bottomNavigationBar: Stack(
+        clipBehavior: Clip.none,
+        alignment: Alignment.topCenter,
+        children: [
+          Container(
+            height: 78,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.06),
+                  blurRadius: 16,
+                  offset: const Offset(0, -4),
                 ),
-              ),
-              label: 'Profile',
+              ],
             ),
-          ],
-        ),
+            child: SafeArea(
+              child: Row(
+                children: [
+                  _buildNavItem(icon: Icons.home_rounded, label: 'Home', index: 0),
+                  _buildNavItem(icon: Icons.history_rounded, label: 'History', index: 1),
+                  const Expanded(child: SizedBox()), // ruang kosong untuk tombol presensi
+                  _buildNavItem(icon: Icons.event_busy_rounded, label: 'Leave', index: 3),
+                  _buildProfileItem(),
+                ],
+              ),
+            ),
+          ),
+          Positioned(
+            top: -22,
+            child: GestureDetector(
+              onTap: () => _onItemTapped(2),
+              child: Column(
+                children: [
+                  Container(
+                    width: 62,
+                    height: 62,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: const LinearGradient(
+                        colors: [_accentColor, _primaryColor],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: _primaryColor.withOpacity(0.4),
+                          blurRadius: 14,
+                          offset: const Offset(0, 6),
+                        ),
+                      ],
+                      border: Border.all(color: Colors.white, width: 4),
+                    ),
+                    child: const Icon(Icons.fingerprint_rounded, color: Colors.white, size: 30),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Presensi',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: _selectedIndex == 2 ? FontWeight.w700 : FontWeight.w500,
+                      color: _selectedIndex == 2 ? _primaryColor : Colors.grey.shade500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -23,6 +23,9 @@ class _HistoryPageState extends State<HistoryPage> {
   List<AttendanceTodayEntity> _history = [];
   DateTime _selectedMonth = DateTime(DateTime.now().year, DateTime.now().month, 1);
 
+  static const _primaryColor = Color(0xFF0F5C48);
+  static const _accentColor = Color(0xFFA9C23F);
+
   static const List<String> _monthNames = [
     'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
     'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
@@ -100,9 +103,9 @@ class _HistoryPageState extends State<HistoryPage> {
   Color _statusColor(String status) {
     switch (status) {
       case 'checked_out':
-        return Colors.green;
+        return _primaryColor;
       case 'checked_in':
-        return Colors.orange;
+        return const Color(0xFFB45309);
       default:
         return Colors.grey;
     }
@@ -115,16 +118,19 @@ class _HistoryPageState extends State<HistoryPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF7FAF9),
       appBar: AppBar(
         title: const Text('Riwayat Presensi'),
         elevation: 0,
+        backgroundColor: Colors.white,
+        foregroundColor: const Color(0xFF0F172A),
       ),
       body: Column(
         children: [
           _buildMonthSelector(),
           Expanded(
             child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
+                ? const Center(child: CircularProgressIndicator(color: _primaryColor))
                 : _errorMessage != null
                 ? Center(
               child: Padding(
@@ -138,12 +144,17 @@ class _HistoryPageState extends State<HistoryPage> {
                       style: const TextStyle(color: Colors.redAccent),
                     ),
                     const SizedBox(height: 12),
-                    OutlinedButton(onPressed: _loadHistory, child: const Text('Coba Lagi')),
+                    OutlinedButton(
+                      onPressed: _loadHistory,
+                      style: OutlinedButton.styleFrom(foregroundColor: _primaryColor),
+                      child: const Text('Coba Lagi'),
+                    ),
                   ],
                 ),
               ),
             )
                 : RefreshIndicator(
+              color: _primaryColor,
               onRefresh: _loadHistory,
               child: _history.isEmpty
                   ? ListView(
@@ -191,15 +202,18 @@ class _HistoryPageState extends State<HistoryPage> {
         children: [
           IconButton(
             onPressed: _goToPreviousMonth,
-            icon: const Icon(Icons.chevron_left_rounded),
+            icon: const Icon(Icons.chevron_left_rounded, color: _primaryColor),
           ),
           Text(
             '${_monthNames[_selectedMonth.month - 1]} ${_selectedMonth.year}',
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFF0F172A)),
           ),
           IconButton(
             onPressed: _isCurrentMonth ? null : _goToNextMonth,
-            icon: const Icon(Icons.chevron_right_rounded),
+            icon: Icon(
+              Icons.chevron_right_rounded,
+              color: _isCurrentMonth ? Colors.grey.shade300 : _primaryColor,
+            ),
           ),
         ],
       ),
@@ -238,14 +252,13 @@ class _HistoryCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Baris 1: hari+tanggal (kiri) & status (kanan)
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Expanded(
                 child: Text(
                   dateLabel,
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFF0F172A)),
                 ),
               ),
               Container(
@@ -266,7 +279,6 @@ class _HistoryCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 14),
-          // Baris 2: foto + check in | foto + check out
           Row(
             children: [
               Expanded(
@@ -275,7 +287,7 @@ class _HistoryCard extends StatelessWidget {
                   icon: Icons.login_rounded,
                   label: 'Check In',
                   time: item.checkInTime ?? '--:--',
-                  color: Colors.blue,
+                  color: const Color(0xFF6B8E2F),
                 ),
               ),
               const SizedBox(width: 12),
@@ -285,7 +297,7 @@ class _HistoryCard extends StatelessWidget {
                   icon: Icons.logout_rounded,
                   label: 'Check Out',
                   time: item.checkOutTime ?? '--:--',
-                  color: Colors.indigo,
+                  color: const Color(0xFF0F5C48),
                 ),
               ),
             ],
@@ -324,21 +336,39 @@ class _PhotoTimeBlock extends StatelessWidget {
     required this.color,
   });
 
+  void _openFullScreen(BuildContext context) {
+    if (photoUrl == null) return;
+
+    Navigator.of(context).push(
+      PageRouteBuilder(
+        opaque: false,
+        barrierColor: Colors.black.withOpacity(0.9),
+        pageBuilder: (_, __, ___) => _FullScreenPhotoViewer(photoUrl: photoUrl!, label: label),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(10),
-          child: photoUrl != null
-              ? Image.network(
-            photoUrl!,
-            width: 44,
-            height: 44,
-            fit: BoxFit.cover,
-            errorBuilder: (_, __, ___) => _fallbackIcon(),
-          )
-              : _fallbackIcon(),
+        GestureDetector(
+          onTap: () => _openFullScreen(context),
+          child: Hero(
+            tag: photoUrl ?? '$label-$time',
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: photoUrl != null
+                  ? Image.network(
+                photoUrl!,
+                width: 44,
+                height: 44,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => _fallbackIcon(),
+              )
+                  : _fallbackIcon(),
+            ),
+          ),
         ),
         const SizedBox(width: 8),
         Expanded(
@@ -348,7 +378,7 @@ class _PhotoTimeBlock extends StatelessWidget {
               Text(label, style: TextStyle(fontSize: 11, color: Colors.grey.shade500)),
               Text(
                 time,
-                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: Color(0xFF0F172A)),
               ),
             ],
           ),
@@ -363,6 +393,44 @@ class _PhotoTimeBlock extends StatelessWidget {
       height: 44,
       color: color.withOpacity(0.1),
       child: Icon(icon, size: 20, color: color),
+    );
+  }
+}
+
+class _FullScreenPhotoViewer extends StatelessWidget {
+  final String photoUrl;
+  final String label;
+
+  const _FullScreenPhotoViewer({required this.photoUrl, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black.withOpacity(0.9),
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        foregroundColor: Colors.white,
+        title: Text(label),
+      ),
+      body: Center(
+        child: Hero(
+          tag: photoUrl,
+          child: InteractiveViewer(
+            minScale: 0.8,
+            maxScale: 4,
+            child: Image.network(
+              photoUrl,
+              fit: BoxFit.contain,
+              errorBuilder: (_, __, ___) => const Icon(Icons.broken_image_rounded, color: Colors.white54, size: 64),
+              loadingBuilder: (context, child, progress) {
+                if (progress == null) return child;
+                return const CircularProgressIndicator(color: Colors.white);
+              },
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

@@ -21,6 +21,7 @@ import '../widgets/dashboard/dashboard_header.dart';
 import '../widgets/dashboard/presensi_card.dart';
 import '../widgets/dashboard/stat_grid.dart';
 import '../widgets/dashboard/leave_status_card.dart';
+import '../widgets/dashboard/shift_schedule_card.dart';
 
 class DashboardPage extends StatefulWidget {
   final VoidCallback? onNavigateToProfile;
@@ -160,9 +161,14 @@ class _DashboardPageState extends State<DashboardPage> {
       ),
       decoration: const BoxDecoration(
         gradient: LinearGradient(
-          colors: [Color(0xFFD7E2E7), Color(0xFFF9F9FB)],
-          begin: Alignment.bottomRight,
-          end: Alignment.topLeft,
+          colors: [
+            Color(0xFF042A22),
+            Color(0xFF0F5C48),
+            Color(0xFF1B7A5C),
+          ],
+          stops: [0.0, 0.55, 1.0],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
       ),
       child: SafeArea(

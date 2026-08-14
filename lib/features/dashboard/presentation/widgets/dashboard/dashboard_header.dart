@@ -18,7 +18,7 @@ class DashboardHeader extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(24),
       decoration: const BoxDecoration(
-        color: Color(0xFFF1F5F9),
+        color: Color(0xFFF7FAF9),
         borderRadius: BorderRadius.only(
           bottomLeft: Radius.circular(32),
           bottomRight: Radius.circular(32),
@@ -29,12 +29,19 @@ class DashboardHeader extends StatelessWidget {
         children: [
           Row(
             children: [
-              CircleAvatar(
-                radius: 28,
-                backgroundColor: const Color(0xFFE2E8F0),
-                backgroundImage: photoUrl != null
-                    ? NetworkImage(photoUrl!)
-                    : const AssetImage('assets/images/profil.jpg') as ImageProvider,
+              Container(
+                padding: const EdgeInsets.all(2.5),
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Color(0xFFA9C23F),
+                ),
+                child: CircleAvatar(
+                  radius: 28,
+                  backgroundColor: const Color(0xFFF7FAF9),
+                  backgroundImage: photoUrl != null
+                      ? NetworkImage(photoUrl!)
+                      : const AssetImage('assets/images/profil.jpg') as ImageProvider,
+                ),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -44,7 +51,7 @@ class DashboardHeader extends StatelessWidget {
                     Text(
                       name,
                       style: const TextStyle(
-                        color: Color(0xFF0F172A),
+                        color: Color(0xFF0F5C48),
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
                       ),
@@ -53,8 +60,9 @@ class DashboardHeader extends StatelessWidget {
                     Text(
                       role,
                       style: const TextStyle(
-                        color: Color(0xFF005CB0),
+                        color: Color(0xFF6B8E2F),
                         fontSize: 16,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                   ],

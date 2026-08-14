@@ -2,6 +2,7 @@ import '../entities/attendance_location_entity.dart';
 import '../entities/attendance_today_entity.dart';
 import '../entities/check_in_result_entity.dart';
 import '../entities/check_out_result_entity.dart';
+import '../entities/emergency_check_in_result_entity.dart';
 
 abstract class AttendanceRepository {
   Future<AttendanceLocationEntity> getMyLocation();
@@ -25,5 +26,13 @@ abstract class AttendanceRepository {
   Future<List<AttendanceTodayEntity>> getHistory({
     String? startDate,
     String? endDate,
+  });
+
+  Future<EmergencyCheckInResultEntity> submitEmergencyCheckIn({
+    required double latitude,
+    required double longitude,
+    required String reason,
+    required String selfiePhotoPath,
+    required String proofPhotoPath,
   });
 }

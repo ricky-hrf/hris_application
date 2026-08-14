@@ -31,17 +31,17 @@ class AuthTextField extends StatelessWidget {
       decoration: InputDecoration(
         labelText: label,
         labelStyle: const TextStyle(color: Color(0xFF64748B)),
-        prefixIcon: Icon(icon, color: const Color(0xFF3053B6)),
+        prefixIcon: Icon(icon, color: const Color(0xFF0F5C48)),
         suffixIcon: suffixIcon,
         filled: true,
-        fillColor: const Color(0xFFF9F9FB),
+        fillColor: const Color(0xFFF7FAF9),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
           borderSide: BorderSide.none,
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: Color(0xFF3053B6), width: 1.5),
+          borderSide: const BorderSide(color: Color(0xFF0F5C48), width: 1.5),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),

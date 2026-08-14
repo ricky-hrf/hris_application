@@ -135,4 +135,39 @@ class ApiClient {
       throw const NetworkException();
     }
   }
+
+  Future<Map<String, dynamic>> postMultipartMultiFile(
+      String path, {
+        required Map<String, String> fields,
+        required Map<String, String> files, // fieldName -> filePath
+        bool requireAuth = false,
+      }) async {
+    try {
+      final uri = Uri.parse('$baseUrl$path');
+      final request = http.MultipartRequest('POST', uri);
+
+      final headers = <String, String>{'Accept': 'application/json'};
+      if (requireAuth) {
+        final token = await _storage.getToken();
+        if (token == null) {
+          throw const InvalidCredentialsException('Sesi berakhir, silakan login ulang');
+        }
+        headers['Authorization'] = 'Bearer $token';
+      }
+      request.headers.addAll(headers);
+      request.fields.addAll(fields);
+
+      for (final entry in files.entries) {
+        request.files.add(await http.MultipartFile.fromPath(entry.key, entry.value));
+      }
+
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+      return _handleResponse(response);
+    } on SocketException {
+      throw const NetworkException();
+    } on http.ClientException {
+      throw const NetworkException();
+    }
+  }
 }

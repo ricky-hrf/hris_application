@@ -19,6 +19,7 @@ import '../../domain/usecases/check_out_usecase.dart';
 import '../../domain/usecases/get_my_location_usecase.dart';
 import '../../domain/usecases/get_today_attendance_usecase.dart';
 import '../widgets/presensi/location_badge.dart';
+import 'emergency_check_in_page.dart';
 
 class PresensiPage extends StatefulWidget {
   const PresensiPage({super.key});
@@ -146,6 +147,15 @@ class _PresensiPageState extends State<PresensiPage> {
   Future<void> _refreshTodayAttendance() async {
     final todayAttendance = await _getTodayAttendanceUseCase();
     setState(() => _todayAttendance = todayAttendance);
+  }
+
+  Future<void> _openEmergencyCheckIn() async {
+    final result = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(builder: (_) => const EmergencyCheckInPage()),
+    );
+    if (result == true) {
+      await _refreshTodayAttendance();
+    }
   }
 
   Future<void> _handleSubmit() async {
@@ -316,7 +326,7 @@ class _PresensiPageState extends State<PresensiPage> {
               heroTag: 'refresh_location',
               backgroundColor: Colors.white,
               onPressed: _init,
-              child: const Icon(Icons.my_location_rounded, color: Color(0xFF0E2DE8)),
+              child: const Icon(Icons.my_location_rounded, color: Color(0xFF6B8E2F)),
             ),
           ),
 
@@ -325,7 +335,7 @@ class _PresensiPageState extends State<PresensiPage> {
             right: 0,
             bottom: 0,
             child: Container(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
               decoration: const BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.only(
@@ -336,52 +346,75 @@ class _PresensiPageState extends State<PresensiPage> {
                   BoxShadow(color: Colors.black12, blurRadius: 12, offset: Offset(0, -4)),
                 ],
               ),
-              child: Row(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  GestureDetector(
-                    onTap: _isCheckedOut ? null : _takePhoto,
-                    child: Container(
-                      width: 64,
-                      height: 64,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF1F5F9),
-                        borderRadius: BorderRadius.circular(16),
-                        image: _capturedPhoto != null
-                            ? DecorationImage(image: FileImage(_capturedPhoto!), fit: BoxFit.cover)
-                            : null,
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton.icon(
+                      onPressed: _isCheckedOut ? null : _openEmergencyCheckIn,
+                      icon: const Icon(Icons.warning_amber_rounded, size: 16, color: Color(0xFFB45309)),
+                      label: const Text(
+                        'Tidak bisa hadir tepat waktu di lokasi absensi?',
+                        style: TextStyle(fontSize: 12, color: Color(0xFFB45309), fontWeight: FontWeight.w600),
                       ),
-                      child: _capturedPhoto == null
-                          ? const Icon(Icons.camera_alt_rounded, color: Color(0xFF3053B6), size: 28)
-                          : null,
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
                     ),
                   ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: SizedBox(
-                      height: 52,
-                      child: ElevatedButton(
-                        onPressed: _canSubmit ? _handleSubmit : null,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: _isCheckedIn ? const Color(0xFFE85D04) : const Color(0xFF0E2DE8),
-                          foregroundColor: Colors.white,
-                          disabledBackgroundColor: Colors.grey.shade300,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                        ),
-                        child: _isSubmitting
-                            ? const SizedBox(
-                          width: 22,
-                          height: 22,
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 2.5,
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      GestureDetector(
+                        onTap: _isCheckedOut ? null : _takePhoto,
+                        child: Container(
+                          width: 64,
+                          height: 64,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF1F5F9),
+                            borderRadius: BorderRadius.circular(16),
+                            image: _capturedPhoto != null
+                                ? DecorationImage(image: FileImage(_capturedPhoto!), fit: BoxFit.cover)
+                                : null,
                           ),
-                        )
-                            : Text(
-                          _submitButtonLabel,
-                          style: const TextStyle(fontWeight: FontWeight.bold),
+                          child: _capturedPhoto == null
+                              ? const Icon(Icons.camera_alt_rounded, color: Color(0xFF0F5C48), size: 28)
+                              : null,
                         ),
                       ),
-                    ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: SizedBox(
+                          height: 52,
+                          child: ElevatedButton(
+                            onPressed: _canSubmit ? _handleSubmit : null,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: _isCheckedIn ? const Color(0xFFE85D04) : const Color(
+                                  0xFF1B7758),
+                              foregroundColor: Colors.white,
+                              disabledBackgroundColor: Colors.grey.shade300,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                            ),
+                            child: _isSubmitting
+                                ? const SizedBox(
+                              width: 22,
+                              height: 22,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2.5,
+                              ),
+                            )
+                                : Text(
+                              _submitButtonLabel,
+                              style: const TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),

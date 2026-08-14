@@ -2,6 +2,7 @@ import '../../domain/entities/attendance_location_entity.dart';
 import '../../domain/entities/attendance_today_entity.dart';
 import '../../domain/entities/check_in_result_entity.dart';
 import '../../domain/entities/check_out_result_entity.dart';
+import '../../domain/entities/emergency_check_in_result_entity.dart';
 import '../../domain/repositories/attendance_repository.dart';
 import '../datasources/attendance_remote_datasource.dart';
 
@@ -51,5 +52,22 @@ class AttendanceRepositoryImpl implements AttendanceRepository {
     String? endDate,
   }) {
     return remoteDataSource.getHistory(startDate: startDate, endDate: endDate);
+  }
+
+  @override
+  Future<EmergencyCheckInResultEntity> submitEmergencyCheckIn({
+    required double latitude,
+    required double longitude,
+    required String reason,
+    required String selfiePhotoPath,
+    required String proofPhotoPath,
+  }) {
+    return remoteDataSource.submitEmergencyCheckIn(
+      latitude: latitude,
+      longitude: longitude,
+      reason: reason,
+      selfiePhotoPath: selfiePhotoPath,
+      proofPhotoPath: proofPhotoPath,
+    );
   }
 }

@@ -21,7 +21,7 @@ class LeaveStatusCard extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFF0F7A3D), Color(0xFF34C77B)],
+          colors: [Color(0xFF6B8E2F), Color(0xFFA9C23F)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),

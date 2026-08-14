@@ -4,6 +4,7 @@ import '../models/attendance_location_model.dart';
 import '../models/attendance_today_model.dart';
 import '../models/check_in_result_model.dart';
 import '../models/check_out_result_model.dart';
+import '../models/emergency_check_in_result_model.dart';
 
 abstract class AttendanceRemoteDataSource {
   Future<AttendanceLocationModel> getMyLocation();
@@ -27,6 +28,14 @@ abstract class AttendanceRemoteDataSource {
   Future<List<AttendanceTodayModel>> getHistory({
     String? startDate,
     String? endDate,
+  });
+
+  Future<EmergencyCheckInResultModel> submitEmergencyCheckIn({
+    required double latitude,
+    required double longitude,
+    required String reason,
+    required String selfiePhotoPath,
+    required String proofPhotoPath,
   });
 }
 
@@ -110,5 +119,29 @@ class AttendanceRemoteDataSourceImpl implements AttendanceRemoteDataSource {
     return list
         .map((e) => AttendanceTodayModel.fromJson(e as Map<String, dynamic>))
         .toList();
+  }
+
+  @override
+  Future<EmergencyCheckInResultModel> submitEmergencyCheckIn({
+    required double latitude,
+    required double longitude,
+    required String reason,
+    required String selfiePhotoPath,
+    required String proofPhotoPath,
+  }) async {
+    final json = await client.postMultipartMultiFile(
+      ApiEndpoints.emergencyCheckIn,
+      fields: {
+        'latitude': latitude.toString(),
+        'longitude': longitude.toString(),
+        'reason': reason,
+      },
+      files: {
+        'selfie_photo': selfiePhotoPath,
+        'proof_photo': proofPhotoPath,
+      },
+      requireAuth: true,
+    );
+    return EmergencyCheckInResultModel.fromJson(json['data'] as Map<String, dynamic>);
   }
 }
