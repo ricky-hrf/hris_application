@@ -22,6 +22,10 @@ import '../widgets/dashboard/presensi_card.dart';
 import '../widgets/dashboard/stat_grid.dart';
 import '../widgets/dashboard/leave_status_card.dart';
 import '../widgets/dashboard/shift_schedule_card.dart';
+import '../../../presensi/domain/entities/emergency_status_entity.dart';
+import '../../../presensi/domain/usecases/get_today_emergency_status_usecase.dart';
+import '../widgets/dashboard/emergency_status_card.dart';
+import '../../../presensi/presentation/pages/emergency_detail_page.dart';
 
 class DashboardPage extends StatefulWidget {
   final VoidCallback? onNavigateToProfile;
@@ -37,11 +41,13 @@ class _DashboardPageState extends State<DashboardPage> {
   late final GetProfileUseCase _getProfileUseCase;
   late final GetAttendanceHistoryUseCase _getAttendanceHistoryUseCase;
   late final GetMyLeaveRequestsUseCase _getMyLeaveRequestsUseCase;
+  late final GetTodayEmergencyStatusUseCase _getTodayEmergencyStatusUseCase;
 
   bool _isLoading = true;
   AttendanceTodayEntity? _todayAttendance;
   UserEntity? _profile;
   LeaveRequestEntity? _ongoingLeave;
+  EmergencyStatusEntity? _emergencyStatus;
   Map<String, int> _statusCounts = {};
 
   static const _ongoingLeaveStatuses = ['pending_supervisor', 'pending_hr'];
@@ -64,6 +70,7 @@ class _DashboardPageState extends State<DashboardPage> {
     _getProfileUseCase = GetProfileUseCase(authRepository);
     _getAttendanceHistoryUseCase = GetAttendanceHistoryUseCase(attendanceRepository);
     _getMyLeaveRequestsUseCase = GetMyLeaveRequestsUseCase(leaveRepository);
+    _getTodayEmergencyStatusUseCase = GetTodayEmergencyStatusUseCase(attendanceRepository);
 
     _loadData();
   }
@@ -112,10 +119,17 @@ class _DashboardPageState extends State<DashboardPage> {
           _ongoingLeave = ongoing;
         });
       }
-    } catch (_) {
-      // biarkan tetap default kalau gagal
+    } catch (e) {
+      debugPrint('Dashboard load error: $e');
     } finally {
       if (mounted) setState(() => _isLoading = false);
+    }
+
+    try {
+      final emergency = await _getTodayEmergencyStatusUseCase();
+      if (mounted) setState(() => _emergencyStatus = emergency);
+    } catch (e) {
+      debugPrint('Emergency status load error: $e');
     }
   }
 
@@ -202,6 +216,23 @@ class _DashboardPageState extends State<DashboardPage> {
                     startDate: _ongoingLeave!.startDate,
                     endDate: _ongoingLeave!.endDate,
                     statusLabel: _leaveStatusLabel(_ongoingLeave!.status),
+                  ),
+                ],
+                if (!_isLoading &&
+                    _emergencyStatus != null &&
+                    _emergencyStatus!.emergencyStatus == 'pending') ...[
+                  const SizedBox(height: 16),
+                  EmergencyStatusCard(
+                    checkedAt: _emergencyStatus!.checkedAt,
+                    reason: _emergencyStatus!.emergencyReason,
+                    status: _emergencyStatus!.emergencyStatus,
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => EmergencyDetailPage(checkInId: _emergencyStatus!.id),
+                        ),
+                      );
+                    },
                   ),
                 ],
                 const SizedBox(height: 16),

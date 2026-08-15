@@ -3,6 +3,8 @@ import '../../domain/entities/attendance_today_entity.dart';
 import '../../domain/entities/check_in_result_entity.dart';
 import '../../domain/entities/check_out_result_entity.dart';
 import '../../domain/entities/emergency_check_in_result_entity.dart';
+import '../../domain/entities/emergency_status_entity.dart';
+import '../../domain/entities/emergency_detail_entity.dart';
 import '../../domain/repositories/attendance_repository.dart';
 import '../datasources/attendance_remote_datasource.dart';
 
@@ -70,4 +72,14 @@ class AttendanceRepositoryImpl implements AttendanceRepository {
       proofPhotoPath: proofPhotoPath,
     );
   }
+
+  @override
+  Future<EmergencyStatusEntity?> getTodayEmergencyStatus() => remoteDataSource.getTodayEmergencyStatus();
+
+  @override
+  Future<EmergencyDetailEntity> getEmergencyDetail(int id) => remoteDataSource.getEmergencyDetail(id);
+
+  @override
+  Future<List<EmergencyStatusEntity>> getMyEmergencyHistory() => remoteDataSource.getMyEmergencyHistory();
+
 }

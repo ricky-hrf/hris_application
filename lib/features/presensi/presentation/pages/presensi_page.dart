@@ -20,6 +20,7 @@ import '../../domain/usecases/get_my_location_usecase.dart';
 import '../../domain/usecases/get_today_attendance_usecase.dart';
 import '../widgets/presensi/location_badge.dart';
 import 'emergency_check_in_page.dart';
+import 'emergency_history_page.dart';
 
 class PresensiPage extends StatefulWidget {
   const PresensiPage({super.key});
@@ -233,6 +234,17 @@ class _PresensiPageState extends State<PresensiPage> {
         title: const Text('Presensi'),
         automaticallyImplyLeading: false,
         elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.receipt_long_rounded),
+            tooltip: 'Riwayat Presensi Darurat',
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const EmergencyHistoryPage()),
+              );
+            },
+          ),
+        ],
       ),
       body: _isLoadingLocation
           ? const Center(child: CircularProgressIndicator())

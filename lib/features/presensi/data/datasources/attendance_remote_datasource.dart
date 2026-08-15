@@ -5,9 +5,12 @@ import '../models/attendance_today_model.dart';
 import '../models/check_in_result_model.dart';
 import '../models/check_out_result_model.dart';
 import '../models/emergency_check_in_result_model.dart';
+import '../models/emergency_status_model.dart';
+import '../models/emergency_detail_model.dart';
 
 abstract class AttendanceRemoteDataSource {
   Future<AttendanceLocationModel> getMyLocation();
+  Future<List<EmergencyStatusModel>> getMyEmergencyHistory();
 
   Future<CheckInResultModel> checkIn({
     required double latitude,
@@ -37,6 +40,10 @@ abstract class AttendanceRemoteDataSource {
     required String selfiePhotoPath,
     required String proofPhotoPath,
   });
+
+  Future<EmergencyStatusModel?> getTodayEmergencyStatus();
+
+  Future<EmergencyDetailModel> getEmergencyDetail(int id);
 }
 
 class AttendanceRemoteDataSourceImpl implements AttendanceRemoteDataSource {
@@ -143,5 +150,26 @@ class AttendanceRemoteDataSourceImpl implements AttendanceRemoteDataSource {
       requireAuth: true,
     );
     return EmergencyCheckInResultModel.fromJson(json['data'] as Map<String, dynamic>);
+  }
+
+  @override
+  Future<EmergencyStatusModel?> getTodayEmergencyStatus() async {
+    final json = await client.get(ApiEndpoints.emergencyCheckInToday, requireAuth: true);
+    final data = json['data'];
+    if (data == null) return null;
+    return EmergencyStatusModel.fromJson(data as Map<String, dynamic>);
+  }
+
+  @override
+  Future<EmergencyDetailModel> getEmergencyDetail(int id) async {
+    final json = await client.get('${ApiEndpoints.emergencyCheckIn}/$id', requireAuth: true);
+    return EmergencyDetailModel.fromJson(json['data'] as Map<String, dynamic>);
+  }
+
+  @override
+  Future<List<EmergencyStatusModel>> getMyEmergencyHistory() async {
+    final json = await client.get(ApiEndpoints.emergencyCheckInHistory, requireAuth: true);
+    final list = json['data'] as List;
+    return list.map((e) => EmergencyStatusModel.fromJson(e as Map<String, dynamic>)).toList();
   }
 }

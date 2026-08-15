@@ -3,6 +3,8 @@ import '../entities/attendance_today_entity.dart';
 import '../entities/check_in_result_entity.dart';
 import '../entities/check_out_result_entity.dart';
 import '../entities/emergency_check_in_result_entity.dart';
+import '../entities/emergency_status_entity.dart';
+import '../entities/emergency_detail_entity.dart';
 
 abstract class AttendanceRepository {
   Future<AttendanceLocationEntity> getMyLocation();
@@ -35,4 +37,10 @@ abstract class AttendanceRepository {
     required String selfiePhotoPath,
     required String proofPhotoPath,
   });
+
+  Future<EmergencyStatusEntity?> getTodayEmergencyStatus();
+
+  Future<EmergencyDetailEntity> getEmergencyDetail(int id);
+
+  Future<List<EmergencyStatusEntity>> getMyEmergencyHistory();
 }
