@@ -50,7 +50,7 @@ class _DashboardPageState extends State<DashboardPage> {
   EmergencyStatusEntity? _emergencyStatus;
   Map<String, int> _statusCounts = {};
 
-  static const _ongoingLeaveStatuses = ['pending_supervisor', 'pending_hr'];
+  static const _ongoingLeaveStatuses = ['pending'];
 
   @override
   void initState() {
@@ -157,10 +157,8 @@ class _DashboardPageState extends State<DashboardPage> {
 
   String _leaveStatusLabel(String status) {
     switch (status) {
-      case 'pending_supervisor':
-        return 'Menunggu Atasan';
-      case 'pending_hr':
-        return 'Menunggu HRD';
+      case 'pending':
+        return 'Menunggu Persetujuan';
       default:
         return status;
     }

@@ -1,4 +1,5 @@
 import '../../domain/entities/leave_request_entity.dart';
+import 'leave_approval_model.dart';
 
 class LeaveRequestModel extends LeaveRequestEntity {
   const LeaveRequestModel({
@@ -11,12 +12,12 @@ class LeaveRequestModel extends LeaveRequestEntity {
     required super.reason,
     required super.attachment,
     required super.status,
-    required super.supervisorNote,
-    required super.hrNote,
+    required super.approvals,
   });
 
   factory LeaveRequestModel.fromJson(Map<String, dynamic> json) {
     final leaveType = json['leave_type'] as Map<String, dynamic>?;
+    final approvalsJson = json['approvals'] as List? ?? [];
 
     return LeaveRequestModel(
       id: json['id'] as int,
@@ -28,8 +29,9 @@ class LeaveRequestModel extends LeaveRequestEntity {
       reason: json['reason'] as String,
       attachment: json['attachment'] as String?,
       status: json['status'] as String,
-      supervisorNote: json['supervisor_note'] as String?,
-      hrNote: json['hr_note'] as String?,
+      approvals: approvalsJson
+          .map((e) => LeaveApprovalModel.fromJson(e as Map<String, dynamic>))
+          .toList(),
     );
   }
 }

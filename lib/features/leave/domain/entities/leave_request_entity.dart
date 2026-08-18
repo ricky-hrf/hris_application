@@ -1,3 +1,5 @@
+import 'leave_approval_entity.dart';
+
 class LeaveRequestEntity {
   final int id;
   final int leaveTypeId;
@@ -8,8 +10,7 @@ class LeaveRequestEntity {
   final String reason;
   final String? attachment;
   final String status;
-  final String? supervisorNote;
-  final String? hrNote;
+  final List<LeaveApprovalEntity> approvals;
 
   const LeaveRequestEntity({
     required this.id,
@@ -21,7 +22,6 @@ class LeaveRequestEntity {
     required this.reason,
     required this.attachment,
     required this.status,
-    required this.supervisorNote,
-    required this.hrNote,
+    required this.approvals,
   });
 }

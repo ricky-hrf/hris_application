@@ -8,6 +8,7 @@ import '../../domain/entities/leave_request_entity.dart';
 import '../../domain/usecases/get_my_leave_requests_usecase.dart';
 import '../../domain/usecases/cancel_leave_request_usecase.dart';
 import 'leave_request_form_page.dart';
+import '../../domain/entities/leave_approval_entity.dart';
 
 class LeavePage extends StatefulWidget {
   const LeavePage({super.key});
@@ -25,7 +26,7 @@ class _LeavePageState extends State<LeavePage> with SingleTickerProviderStateMix
   bool _isLoading = true;
   String? _errorMessage;
 
-  static const _ongoingStatuses = ['pending_supervisor', 'pending_hr'];
+  static const _ongoingStatuses = ['pending'];
   static const _historyStatuses = ['approved', 'rejected', 'cancelled'];
 
   @override
@@ -123,10 +124,8 @@ class _LeavePageState extends State<LeavePage> with SingleTickerProviderStateMix
 
   String _statusLabel(String status) {
     switch (status) {
-      case 'pending_supervisor':
-        return 'Menunggu Atasan';
-      case 'pending_hr':
-        return 'Menunggu HRD';
+      case 'pending':
+        return 'Menunggu Persetujuan';
       case 'approved':
         return 'Disetujui';
       case 'rejected':
@@ -268,7 +267,7 @@ class _LeavePageState extends State<LeavePage> with SingleTickerProviderStateMix
                 ),
                 if (showProgress) ...[
                   const SizedBox(height: 12),
-                  _buildProgressSteps(req.status),
+                  _buildProgressSteps(req.approvals),
                   const SizedBox(height: 8),
                   Align(
                     alignment: Alignment.centerRight,
@@ -279,19 +278,14 @@ class _LeavePageState extends State<LeavePage> with SingleTickerProviderStateMix
                     ),
                   ),
                 ],
-                if (!showProgress &&
-                    (req.supervisorNote != null || req.hrNote != null)) ...[
+                if (!showProgress && req.approvals.any((a) => a.note != null)) ...[
                   const SizedBox(height: 8),
-                  if (req.hrNote != null)
-                    Text(
-                      'Catatan HRD: ${req.hrNote}',
+                  ...req.approvals.where((a) => a.note != null).map(
+                        (a) => Text(
+                      'Catatan ${a.approverPosition}: ${a.note}',
                       style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
                     ),
-                  if (req.supervisorNote != null)
-                    Text(
-                      'Catatan Atasan: ${req.supervisorNote}',
-                      style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
-                    ),
+                  ),
                 ],
               ],
             ),
@@ -301,31 +295,38 @@ class _LeavePageState extends State<LeavePage> with SingleTickerProviderStateMix
     );
   }
 
-  Widget _buildProgressSteps(String status) {
-    final steps = ['Diajukan', 'Atasan', 'HRD'];
-    int activeStep;
-    switch (status) {
-      case 'pending_supervisor':
-        activeStep = 1;
-        break;
-      case 'pending_hr':
-        activeStep = 2;
-        break;
-      default:
-        activeStep = 0;
-    }
+  Widget _buildProgressSteps(List<LeaveApprovalEntity> approvals) {
+    if (approvals.isEmpty) return const SizedBox.shrink();
 
-    return Row(
-      children: List.generate(steps.length, (i) {
-        final isDone = i < activeStep;
-        final isActive = i == activeStep;
-        final color = isDone
+    final sorted = [...approvals]..sort((a, b) => a.sequence.compareTo(b.sequence));
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: List.generate(sorted.length, (i) {
+        final step = sorted[i];
+        final isDone = step.status == 'approved';
+        final isRejected = step.status == 'rejected';
+        final isActive = step.status == 'pending' &&
+            sorted.take(i).every((s) => s.status == 'approved');
+
+        final color = isRejected
+            ? Colors.red
+            : isDone
             ? Colors.green
             : isActive
             ? Colors.orange
-            : Colors.grey.shade300;
+            : Colors.grey.shade400;
 
-        return Expanded(
+        final label = isDone
+            ? 'Disetujui ${step.approverPosition}'
+            : isRejected
+            ? 'Ditolak ${step.approverPosition}'
+            : isActive
+            ? 'Menunggu persetujuan ${step.approverPosition}'
+            : step.approverPosition;
+
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 6),
           child: Row(
             children: [
               CircleAvatar(
@@ -333,25 +334,21 @@ class _LeavePageState extends State<LeavePage> with SingleTickerProviderStateMix
                 backgroundColor: color,
                 child: isDone
                     ? const Icon(Icons.check, size: 10, color: Colors.white)
+                    : isRejected
+                    ? const Icon(Icons.close, size: 10, color: Colors.white)
                     : null,
               ),
-              const SizedBox(width: 4),
-              Text(
-                steps[i],
-                style: TextStyle(
-                  fontSize: 10,
-                  color: isDone || isActive ? Colors.black87 : Colors.grey,
-                  fontWeight: isActive ? FontWeight.w700 : FontWeight.w400,
-                ),
-              ),
-              if (i != steps.length - 1)
-                Expanded(
-                  child: Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 4),
-                    height: 2,
-                    color: i < activeStep ? Colors.green : Colors.grey.shade300,
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: isDone || isActive || isRejected ? Colors.black87 : Colors.grey,
+                    fontWeight: isActive ? FontWeight.w700 : FontWeight.w400,
                   ),
                 ),
+              ),
             ],
           ),
         );
