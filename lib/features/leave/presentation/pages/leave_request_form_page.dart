@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/network/api_client.dart';
@@ -16,6 +19,9 @@ class LeaveRequestFormPage extends StatefulWidget {
 }
 
 class _LeaveRequestFormPageState extends State<LeaveRequestFormPage> {
+  static const _allowedExtensions = ['pdf', 'doc', 'docx', 'jpg', 'jpeg', 'png'];
+  static const _maxFileSizeBytes = 2 * 1024 * 1024; // 2MB
+
   final _formKey = GlobalKey<FormState>();
   final _reasonController = TextEditingController();
 
@@ -27,6 +33,10 @@ class _LeaveRequestFormPageState extends State<LeaveRequestFormPage> {
   LeaveTypeEntity? _selectedLeaveType;
   DateTime? _startDate;
   DateTime? _endDate;
+
+  File? _attachmentFile;
+  String? _attachmentFileName;
+  int? _attachmentFileSize;
 
   bool _isLoadingTypes = true;
   bool _isSubmitting = false;
@@ -84,6 +94,49 @@ class _LeaveRequestFormPageState extends State<LeaveRequestFormPage> {
     }
   }
 
+  Future<void> _pickAttachment() async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: _allowedExtensions,
+      withData: false,
+    );
+
+    if (result == null || result.files.isEmpty) return;
+
+    final picked = result.files.single;
+
+    if (picked.path == null) {
+      setState(() => _errorMessage = 'Gagal membaca file yang dipilih.');
+      return;
+    }
+
+    if (picked.size > _maxFileSizeBytes) {
+      setState(() => _errorMessage = 'Ukuran lampiran maksimal 2MB.');
+      return;
+    }
+
+    setState(() {
+      _attachmentFile = File(picked.path!);
+      _attachmentFileName = picked.name;
+      _attachmentFileSize = picked.size;
+      _errorMessage = null;
+    });
+  }
+
+  void _removeAttachment() {
+    setState(() {
+      _attachmentFile = null;
+      _attachmentFileName = null;
+      _attachmentFileSize = null;
+    });
+  }
+
+  String _formatFileSize(int bytes) {
+    if (bytes < 1024) return '$bytes B';
+    if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
+    return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
+  }
+
   String _formatDate(DateTime date) {
     return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
   }
@@ -112,7 +165,7 @@ class _LeaveRequestFormPageState extends State<LeaveRequestFormPage> {
         startDate: _formatDate(_startDate!),
         endDate: _formatDate(_endDate!),
         reason: _reasonController.text,
-        attachmentPath: null, // lampiran belum diaktifkan
+        attachmentPath: _attachmentFile?.path,
       );
 
       if (!mounted) return;
@@ -222,6 +275,72 @@ class _LeaveRequestFormPageState extends State<LeaveRequestFormPage> {
                 validator: (value) =>
                 (value == null || value.trim().isEmpty) ? 'Alasan wajib diisi' : null,
               ),
+              const SizedBox(height: 16),
+
+              const Text('Lampiran (opsional)', style: TextStyle(fontWeight: FontWeight.w600)),
+              const SizedBox(height: 4),
+              Text(
+                'Format: PDF, Word, atau gambar (JPG/PNG). Maks 2MB.',
+                style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+              ),
+              const SizedBox(height: 6),
+              if (_attachmentFile == null)
+                InkWell(
+                  onTap: _pickAttachment,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey.shade400),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.attach_file, size: 20, color: Colors.grey.shade700),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Pilih file lampiran',
+                          style: TextStyle(color: Colors.grey.shade700),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              else
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey.shade400),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.insert_drive_file, size: 20, color: Colors.blue.shade700),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              _attachmentFileName ?? '',
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(fontSize: 13),
+                            ),
+                            if (_attachmentFileSize != null)
+                              Text(
+                                _formatFileSize(_attachmentFileSize!),
+                                style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+                              ),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close, size: 18),
+                        onPressed: _removeAttachment,
+                        tooltip: 'Hapus lampiran',
+                      ),
+                    ],
+                  ),
+                ),
               const SizedBox(height: 24),
 
               ElevatedButton(

@@ -6,7 +6,7 @@ plugins {
 
 android {
     namespace = "com.example.hris_application"
-    compileSdk = flutter.compileSdkVersion
+    compileSdk = 36
     ndkVersion = flutter.ndkVersion
 
     compileOptions {

@@ -1,9 +1,9 @@
 class ApiEndpoints {
   ApiEndpoints._();
 
-  static const String baseUrl = 'http://10.0.2.2:8000/api/v1';
+  // static const String baseUrl = 'http://10.0.2.2:8000/api/v1';
 
-  // static const String baseUrl = 'http://10.18.29.55:8000/api/v1';
+  static const String baseUrl = 'http://10.18.24.63:8000/api/v1';
 
   static const String logout = '/logout';
   static const String login = '/login';
