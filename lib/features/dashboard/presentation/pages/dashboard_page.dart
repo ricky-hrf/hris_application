@@ -26,6 +26,12 @@ import '../../../presensi/domain/entities/emergency_status_entity.dart';
 import '../../../presensi/domain/usecases/get_today_emergency_status_usecase.dart';
 import '../widgets/dashboard/emergency_status_card.dart';
 import '../../../presensi/presentation/pages/emergency_detail_page.dart';
+import '../../../profile/domain/entities/profile_entity.dart';
+import '../../../profile/domain/usecases/get_profile_usecase.dart' as profile_uc;
+import '../../../profile/domain/repositories/profile_repository.dart';
+import '../../../profile/data/datasources/profile_remote_datasource.dart';
+import '../../../profile/data/repositories/profile_repository_impl.dart';
+import '../widgets/dashboard/work_info_card.dart';
 
 class DashboardPage extends StatefulWidget {
   final VoidCallback? onNavigateToProfile;
@@ -39,6 +45,7 @@ class DashboardPage extends StatefulWidget {
 class _DashboardPageState extends State<DashboardPage> {
   late final GetTodayAttendanceUseCase _getTodayAttendanceUseCase;
   late final GetProfileUseCase _getProfileUseCase;
+  late final profile_uc.GetProfileUseCase _getProfileDetailUseCase;
   late final GetAttendanceHistoryUseCase _getAttendanceHistoryUseCase;
   late final GetMyLeaveRequestsUseCase _getMyLeaveRequestsUseCase;
   late final GetTodayEmergencyStatusUseCase _getTodayEmergencyStatusUseCase;
@@ -46,6 +53,7 @@ class _DashboardPageState extends State<DashboardPage> {
   bool _isLoading = true;
   AttendanceTodayEntity? _todayAttendance;
   UserEntity? _profile;
+  ProfileEntity? _profileDetail;
   LeaveRequestEntity? _ongoingLeave;
   EmergencyStatusEntity? _emergencyStatus;
   Map<String, int> _statusCounts = {};
@@ -65,9 +73,12 @@ class _DashboardPageState extends State<DashboardPage> {
       localDataSource: AuthLocalDataSourceImpl(storage),
     );
     final leaveRepository = LeaveRepositoryImpl(LeaveRemoteDataSourceImpl(client));
+    final ProfileRepository profileRepository =
+    ProfileRepositoryImpl(ProfileRemoteDataSourceImpl(client));
 
     _getTodayAttendanceUseCase = GetTodayAttendanceUseCase(attendanceRepository);
     _getProfileUseCase = GetProfileUseCase(authRepository);
+    _getProfileDetailUseCase = profile_uc.GetProfileUseCase(profileRepository);
     _getAttendanceHistoryUseCase = GetAttendanceHistoryUseCase(attendanceRepository);
     _getMyLeaveRequestsUseCase = GetMyLeaveRequestsUseCase(leaveRepository);
     _getTodayEmergencyStatusUseCase = GetTodayEmergencyStatusUseCase(attendanceRepository);
@@ -89,6 +100,7 @@ class _DashboardPageState extends State<DashboardPage> {
         _getProfileUseCase(),
         _getAttendanceHistoryUseCase(startDate: startDate, endDate: endDate),
         _getMyLeaveRequestsUseCase(),
+        _getProfileDetailUseCase(),
       ]);
 
       if (mounted) {
@@ -117,6 +129,7 @@ class _DashboardPageState extends State<DashboardPage> {
           _profile = results[1] as UserEntity;
           _statusCounts = counts;
           _ongoingLeave = ongoing;
+          _profileDetail = results[4] as ProfileEntity;
         });
       }
     } catch (e) {
@@ -192,7 +205,8 @@ class _DashboardPageState extends State<DashboardPage> {
               children: [
                 DashboardHeader(
                   name: _profile?.name ?? _profile?.username ?? '-',
-                  role: _profile?.position ?? _profile?.employmentStatus ?? 'Karyawan',
+                  role: _profile?.position ?? _profile?.employmentStatus ?? '-',
+                  profession: _profileDetail?.profession,
                   photoUrl: _profile?.photoUrl,
                 ),
                 const SizedBox(height: 16),
@@ -233,6 +247,13 @@ class _DashboardPageState extends State<DashboardPage> {
                     },
                   ),
                 ],
+                const SizedBox(height: 16),
+                const WorkInfoCard(
+                  department: 'IGD',
+                  position: 'Perawat Pelaksana',
+                  shiftToday: 'Pagi (07:00 - 14:00)',
+                  shiftTomorrow: null, // contoh kasus "Belum ditentukan"
+                ),
                 const SizedBox(height: 16),
                 StatGrid(counts: _statusCounts),
                 const SizedBox(height: 24),

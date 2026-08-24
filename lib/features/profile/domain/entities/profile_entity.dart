@@ -7,6 +7,7 @@ class ProfileEntity {
   final String gender;
   final String? placeOfBirth;
   final String? dateOfBirth;
+  final String? profession;
   final String? nationalIdNumber;
   final String? address;
   final String? phone;
@@ -27,6 +28,7 @@ class ProfileEntity {
     this.placeOfBirth,
     this.dateOfBirth,
     this.nationalIdNumber,
+    this.profession,
     this.address,
     this.phone,
     this.maritalStatus,
