@@ -19,6 +19,12 @@ class ProfileModel extends ProfileEntity{
     super.educationMajor,
     super.photoUrl,
     super.hireDate,
+    super.position,
+    super.department,
+    super.shiftTodayName,
+    super.shiftTodayTime,
+    super.shiftTomorrowName,
+    super.shiftTomorrowTime,
     required super.isActive,
 });
 
@@ -41,6 +47,12 @@ class ProfileModel extends ProfileEntity{
       educationMajor: json['education_major'] as String?,
       photoUrl: json['photo_url'] as String?,
       hireDate: json['hire_date'] as String?,
+      position: json['position'] as String?,
+      department: json['department'] as String?,
+      shiftTodayName: json['shift_today_name'] as String?,
+      shiftTodayTime: json['shift_today_time'] as String?,
+      shiftTomorrowName: json['shift_tomorrow_name'] as String?,
+      shiftTomorrowTime: json['shift_tomorrow_time'] as String?,
       isActive: json['is_active'] as bool? ?? true,
     );
   }

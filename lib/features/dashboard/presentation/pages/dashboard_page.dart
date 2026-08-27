@@ -17,11 +17,11 @@ import '../../../leave/data/datasources/leave_remote_datasource.dart';
 import '../../../leave/data/repositories/leave_repository_impl.dart';
 import '../../../leave/domain/entities/leave_request_entity.dart';
 import '../../../leave/domain/usecases/get_my_leave_requests_usecase.dart';
+import '../../../leave/presentation/pages/leave_request_form_page.dart';
 import '../widgets/dashboard/dashboard_header.dart';
 import '../widgets/dashboard/presensi_card.dart';
 import '../widgets/dashboard/stat_grid.dart';
 import '../widgets/dashboard/leave_status_card.dart';
-import '../widgets/dashboard/shift_schedule_card.dart';
 import '../../../presensi/domain/entities/emergency_status_entity.dart';
 import '../../../presensi/domain/usecases/get_today_emergency_status_usecase.dart';
 import '../widgets/dashboard/emergency_status_card.dart';
@@ -32,6 +32,8 @@ import '../../../profile/domain/repositories/profile_repository.dart';
 import '../../../profile/data/datasources/profile_remote_datasource.dart';
 import '../../../profile/data/repositories/profile_repository_impl.dart';
 import '../widgets/dashboard/work_info_card.dart';
+import '../widgets/dashboard/quick_menu_grid.dart';
+import '../../../presensi/presentation/pages/emergency_check_in_page.dart';
 
 class DashboardPage extends StatefulWidget {
   final VoidCallback? onNavigateToProfile;
@@ -210,6 +212,37 @@ class _DashboardPageState extends State<DashboardPage> {
                   photoUrl: _profile?.photoUrl,
                 ),
                 const SizedBox(height: 16),
+                QuickMenuGrid(
+                  items: [
+                    QuickMenuItem(
+                      icon: Icons.bolt_rounded,
+                      label: 'Presensi Darurat',
+                      accentColor: const Color(0xFFE0654B),
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(builder: (_) => const EmergencyCheckInPage()),
+                        );
+                      },
+                    ),
+                    QuickMenuItem(
+                      icon: Icons.event_note_rounded,
+                      label: 'Ajukan Cuti',
+                      accentColor: const Color(0xFF6B8E2F),
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(builder: (_) => const LeaveRequestFormPage()),
+                        );
+                      },
+                    ),
+                    QuickMenuItem(
+                      icon: Icons.calendar_month_rounded,
+                      label: 'Jadwal Shift',
+                      accentColor: const Color(0xFF0F5C48),
+                      comingSoon: true,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
                 _isLoading
                     ? const Padding(
                   padding: EdgeInsets.all(24),
@@ -248,11 +281,13 @@ class _DashboardPageState extends State<DashboardPage> {
                   ),
                 ],
                 const SizedBox(height: 16),
-                const WorkInfoCard(
-                  department: 'IGD',
-                  position: 'Perawat Pelaksana',
-                  shiftToday: 'Pagi (07:00 - 14:00)',
-                  shiftTomorrow: null, // contoh kasus "Belum ditentukan"
+                WorkInfoCard(
+                  department: _profileDetail?.department ?? '-',
+                  position: _profileDetail?.position ?? _profile?.position ?? _profile?.employmentStatus ?? 'Pegawai',
+                  shiftTodayName: _profileDetail?.shiftTodayName,
+                  shiftTodayTime: _profileDetail?.shiftTodayTime,
+                  shiftTomorrowName: _profileDetail?.shiftTomorrowName,
+                  shiftTomorrowTime: _profileDetail?.shiftTomorrowTime,
                 ),
                 const SizedBox(height: 16),
                 StatGrid(counts: _statusCounts),

@@ -16,6 +16,12 @@ class ProfileEntity {
   final String? educationMajor;
   final String? photoUrl;
   final String? hireDate;
+  final String? position;
+  final String? department;
+  final String? shiftTodayName;
+  final String? shiftTodayTime;
+  final String? shiftTomorrowName;
+  final String? shiftTomorrowTime;
   final bool isActive;
 
   const ProfileEntity({
@@ -36,6 +42,12 @@ class ProfileEntity {
     this.educationMajor,
     this.photoUrl,
     this.hireDate,
+    this.position,
+    this.department,
+    this.shiftTodayName,
+    this.shiftTodayTime,
+    this.shiftTomorrowName,
+    this.shiftTomorrowTime,
     required this.isActive,
 });
 }

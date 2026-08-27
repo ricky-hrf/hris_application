@@ -3,15 +3,19 @@ import 'package:flutter/material.dart';
 class WorkInfoCard extends StatelessWidget {
   final String department;
   final String position;
-  final String? shiftToday;
-  final String? shiftTomorrow;
+  final String? shiftTodayName;
+  final String? shiftTodayTime;
+  final String? shiftTomorrowName;
+  final String? shiftTomorrowTime;
 
   const WorkInfoCard({
     super.key,
     required this.department,
     required this.position,
-    this.shiftToday,
-    this.shiftTomorrow,
+    this.shiftTodayName,
+    this.shiftTodayTime,
+    this.shiftTomorrowName,
+    this.shiftTomorrowTime,
   });
 
   static const _undetermined = 'Belum ditentukan';
@@ -39,6 +43,7 @@ class WorkInfoCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _InfoTile(
                 icon: Icons.apartment_rounded,
@@ -47,7 +52,6 @@ class WorkInfoCard extends StatelessWidget {
               ),
               Container(
                 width: 1,
-                height: 36,
                 margin: const EdgeInsets.symmetric(horizontal: 14),
                 color: _teal.withOpacity(0.10),
               ),
@@ -63,13 +67,14 @@ class WorkInfoCard extends StatelessWidget {
             child: Divider(color: _teal.withOpacity(0.10), height: 1),
           ),
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
                 child: _ShiftTile(
                   icon: Icons.wb_sunny_rounded,
                   label: 'Shift Hari Ini',
-                  value: (shiftToday?.trim().isNotEmpty ?? false) ? shiftToday! : _undetermined,
-                  isSet: shiftToday?.trim().isNotEmpty ?? false,
+                  name: shiftTodayName,
+                  time: shiftTodayTime,
                 ),
               ),
               const SizedBox(width: 12),
@@ -77,8 +82,8 @@ class WorkInfoCard extends StatelessWidget {
                 child: _ShiftTile(
                   icon: Icons.event_rounded,
                   label: 'Shift Besok',
-                  value: (shiftTomorrow?.trim().isNotEmpty ?? false) ? shiftTomorrow! : _undetermined,
-                  isSet: shiftTomorrow?.trim().isNotEmpty ?? false,
+                  name: shiftTomorrowName,
+                  time: shiftTomorrowTime,
                 ),
               ),
             ],
@@ -100,6 +105,7 @@ class _InfoTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Expanded(
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
             width: 34,
@@ -109,7 +115,7 @@ class _InfoTile extends StatelessWidget {
               borderRadius: BorderRadius.circular(10),
             ),
             alignment: Alignment.center,
-            child: const Icon(Icons.circle, color: Colors.transparent, size: 0), // placeholder removed below
+            child: Icon(icon, color: const Color(0xFF0F5C48), size: 17),
           ),
           const SizedBox(width: 10),
           Expanded(
@@ -120,12 +126,10 @@ class _InfoTile extends StatelessWidget {
                   label,
                   style: const TextStyle(color: Color(0xFF6B8E2F), fontSize: 11, fontWeight: FontWeight.w500),
                 ),
-                const SizedBox(height: 1),
+                const SizedBox(height: 2),
                 Text(
                   value,
                   style: const TextStyle(color: Color(0xFF0F5C48), fontSize: 13.5, fontWeight: FontWeight.w700),
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 1,
                 ),
               ],
             ),
@@ -139,19 +143,24 @@ class _InfoTile extends StatelessWidget {
 class _ShiftTile extends StatelessWidget {
   final IconData icon;
   final String label;
-  final String value;
-  final bool isSet;
+  final String? name;
+  final String? time;
 
   const _ShiftTile({
     required this.icon,
     required this.label,
-    required this.value,
-    required this.isSet,
+    this.name,
+    this.time,
   });
+
+  static const _undetermined = 'Belum ditentukan';
 
   @override
   Widget build(BuildContext context) {
+    final isSet = name != null && name!.trim().isNotEmpty;
+
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
         color: const Color(0xFFF7FAF9),
@@ -172,16 +181,25 @@ class _ShiftTile extends StatelessWidget {
           ),
           const SizedBox(height: 5),
           Text(
-            value,
+            isSet ? name! : _undetermined,
             style: TextStyle(
               color: isSet ? const Color(0xFF0F5C48) : const Color(0xFF0F5C48).withOpacity(0.45),
               fontSize: 13,
               fontWeight: FontWeight.w700,
               fontStyle: isSet ? FontStyle.normal : FontStyle.italic,
             ),
-            overflow: TextOverflow.ellipsis,
-            maxLines: 1,
           ),
+          if (isSet && time != null && time!.trim().isNotEmpty) ...[
+            const SizedBox(height: 2),
+            Text(
+              time!,
+              style: const TextStyle(
+                color: Color(0xFF6B8E2F),
+                fontSize: 11.5,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
         ],
       ),
     );
