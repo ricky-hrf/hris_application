@@ -1,27 +1,21 @@
 import 'package:flutter/material.dart';
+import '../../../../profile/domain/entities/profile_entity.dart';
 
 class WorkInfoCard extends StatelessWidget {
   final String department;
   final String position;
-  final String? shiftTodayName;
-  final String? shiftTodayTime;
-  final String? shiftTomorrowName;
-  final String? shiftTomorrowTime;
+  final ScheduleStatusEntity? scheduleToday;
+  final ScheduleStatusEntity? scheduleTomorrow;
 
   const WorkInfoCard({
     super.key,
     required this.department,
     required this.position,
-    this.shiftTodayName,
-    this.shiftTodayTime,
-    this.shiftTomorrowName,
-    this.shiftTomorrowTime,
+    this.scheduleToday,
+    this.scheduleTomorrow,
   });
 
-  static const _undetermined = 'Belum ditentukan';
   static const _teal = Color(0xFF0F5C48);
-  static const _olive = Color(0xFF6B8E2F);
-  static const _lime = Color(0xFFA9C23F);
 
   @override
   Widget build(BuildContext context) {
@@ -45,21 +39,13 @@ class WorkInfoCard extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _InfoTile(
-                icon: Icons.apartment_rounded,
-                label: 'Departemen',
-                value: department,
-              ),
+              _InfoTile(icon: Icons.apartment_rounded, label: 'Departemen', value: department),
               Container(
                 width: 1,
                 margin: const EdgeInsets.symmetric(horizontal: 14),
                 color: _teal.withOpacity(0.10),
               ),
-              _InfoTile(
-                icon: Icons.badge_rounded,
-                label: 'Posisi',
-                value: position,
-              ),
+              _InfoTile(icon: Icons.badge_rounded, label: 'Posisi', value: position),
             ],
           ),
           Padding(
@@ -73,8 +59,9 @@ class WorkInfoCard extends StatelessWidget {
                 child: _ShiftTile(
                   icon: Icons.wb_sunny_rounded,
                   label: 'Shift Hari Ini',
-                  name: shiftTodayName,
-                  time: shiftTodayTime,
+                  isLibur: scheduleToday?.isLibur ?? false,
+                  shiftName: scheduleToday?.shiftName,
+                  shiftTime: scheduleToday?.shiftTime,
                 ),
               ),
               const SizedBox(width: 12),
@@ -82,8 +69,9 @@ class WorkInfoCard extends StatelessWidget {
                 child: _ShiftTile(
                   icon: Icons.event_rounded,
                   label: 'Shift Besok',
-                  name: shiftTomorrowName,
-                  time: shiftTomorrowTime,
+                  isLibur: scheduleTomorrow?.isLibur ?? false,
+                  shiftName: scheduleTomorrow?.shiftName,
+                  shiftTime: scheduleTomorrow?.shiftTime,
                 ),
               ),
             ],
@@ -143,21 +131,29 @@ class _InfoTile extends StatelessWidget {
 class _ShiftTile extends StatelessWidget {
   final IconData icon;
   final String label;
-  final String? name;
-  final String? time;
+  final bool isLibur;
+  final String? shiftName;
+  final String? shiftTime;
 
   const _ShiftTile({
     required this.icon,
     required this.label,
-    this.name,
-    this.time,
+    required this.isLibur,
+    this.shiftName,
+    this.shiftTime,
   });
 
   static const _undetermined = 'Belum ditentukan';
+  static const _liburColor = Color(0xFFE0654B);
 
   @override
   Widget build(BuildContext context) {
-    final isSet = name != null && name!.trim().isNotEmpty;
+    final isSet = shiftName != null && shiftName!.trim().isNotEmpty;
+
+    final String primaryText = isLibur ? 'Libur' : (isSet ? shiftName! : _undetermined);
+    final Color primaryColor = isLibur
+        ? _liburColor
+        : (isSet ? const Color(0xFF0F5C48) : const Color(0xFF0F5C48).withOpacity(0.45));
 
     return Container(
       width: double.infinity,
@@ -181,18 +177,18 @@ class _ShiftTile extends StatelessWidget {
           ),
           const SizedBox(height: 5),
           Text(
-            isSet ? name! : _undetermined,
+            primaryText,
             style: TextStyle(
-              color: isSet ? const Color(0xFF0F5C48) : const Color(0xFF0F5C48).withOpacity(0.45),
+              color: primaryColor,
               fontSize: 13,
               fontWeight: FontWeight.w700,
-              fontStyle: isSet ? FontStyle.normal : FontStyle.italic,
+              fontStyle: (!isLibur && !isSet) ? FontStyle.italic : FontStyle.normal,
             ),
           ),
-          if (isSet && time != null && time!.trim().isNotEmpty) ...[
+          if (!isLibur && isSet && shiftTime != null && shiftTime!.trim().isNotEmpty) ...[
             const SizedBox(height: 2),
             Text(
-              time!,
+              shiftTime!,
               style: const TextStyle(
                 color: Color(0xFF6B8E2F),
                 fontSize: 11.5,

@@ -1,3 +1,15 @@
+class ScheduleStatusEntity {
+  final bool isLibur;
+  final String? shiftName;
+  final String? shiftTime;
+
+  const ScheduleStatusEntity({
+    required this.isLibur,
+    this.shiftName,
+    this.shiftTime,
+  });
+}
+
 class ProfileEntity {
   final int id;
   final String username;
@@ -18,10 +30,8 @@ class ProfileEntity {
   final String? hireDate;
   final String? position;
   final String? department;
-  final String? shiftTodayName;
-  final String? shiftTodayTime;
-  final String? shiftTomorrowName;
-  final String? shiftTomorrowTime;
+  final ScheduleStatusEntity? scheduleToday;
+  final ScheduleStatusEntity? scheduleTomorrow;
   final bool isActive;
 
   const ProfileEntity({
@@ -44,10 +54,8 @@ class ProfileEntity {
     this.hireDate,
     this.position,
     this.department,
-    this.shiftTodayName,
-    this.shiftTodayTime,
-    this.shiftTomorrowName,
-    this.shiftTomorrowTime,
+    this.scheduleToday,
+    this.scheduleTomorrow,
     required this.isActive,
-});
+  });
 }

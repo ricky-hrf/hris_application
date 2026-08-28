@@ -34,6 +34,7 @@ import '../../../profile/data/repositories/profile_repository_impl.dart';
 import '../widgets/dashboard/work_info_card.dart';
 import '../widgets/dashboard/quick_menu_grid.dart';
 import '../../../presensi/presentation/pages/emergency_check_in_page.dart';
+import '../../../schedule/presentation/pages/schedule_page.dart';
 
 class DashboardPage extends StatefulWidget {
   final VoidCallback? onNavigateToProfile;
@@ -183,9 +184,7 @@ class _DashboardPageState extends State<DashboardPage> {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      constraints: BoxConstraints(
-        minHeight: MediaQuery.of(context).size.height,
-      ),
+      height: MediaQuery.of(context).size.height,
       decoration: const BoxDecoration(
         gradient: LinearGradient(
           colors: [
@@ -199,102 +198,110 @@ class _DashboardPageState extends State<DashboardPage> {
         ),
       ),
       child: SafeArea(
-        child: RefreshIndicator(
-          onRefresh: _loadData,
-          child: SingleChildScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            child: Column(
-              children: [
-                DashboardHeader(
-                  name: _profile?.name ?? _profile?.username ?? '-',
-                  role: _profile?.position ?? _profile?.employmentStatus ?? '-',
-                  profession: _profileDetail?.profession,
-                  photoUrl: _profile?.photoUrl,
-                ),
-                const SizedBox(height: 16),
-                QuickMenuGrid(
-                  items: [
-                    QuickMenuItem(
-                      icon: Icons.bolt_rounded,
-                      label: 'Presensi Darurat',
-                      accentColor: const Color(0xFFE0654B),
-                      onTap: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(builder: (_) => const EmergencyCheckInPage()),
-                        );
-                      },
-                    ),
-                    QuickMenuItem(
-                      icon: Icons.event_note_rounded,
-                      label: 'Ajukan Cuti',
-                      accentColor: const Color(0xFF6B8E2F),
-                      onTap: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(builder: (_) => const LeaveRequestFormPage()),
-                        );
-                      },
-                    ),
-                    QuickMenuItem(
-                      icon: Icons.calendar_month_rounded,
-                      label: 'Jadwal Shift',
-                      accentColor: const Color(0xFF0F5C48),
-                      comingSoon: true,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                _isLoading
-                    ? const Padding(
-                  padding: EdgeInsets.all(24),
-                  child: CircularProgressIndicator(color: Colors.white),
-                )
-                    : PresensiCard(
-                  dateLabel: _dateLabel,
-                  clockInTime: _todayAttendance?.checkInTime ?? '--:--',
-                  clockOutTime: _todayAttendance?.checkOutTime ?? '--:--',
-                  statusLabel: _statusLabel,
-                ),
-                if (!_isLoading && _ongoingLeave != null) ...[
-                  const SizedBox(height: 16),
-                  LeaveStatusCard(
-                    leaveTypeName: _ongoingLeave!.leaveTypeName,
-                    startDate: _ongoingLeave!.startDate,
-                    endDate: _ongoingLeave!.endDate,
-                    statusLabel: _leaveStatusLabel(_ongoingLeave!.status),
-                  ),
-                ],
-                if (!_isLoading &&
-                    _emergencyStatus != null &&
-                    _emergencyStatus!.emergencyStatus == 'pending') ...[
-                  const SizedBox(height: 16),
-                  EmergencyStatusCard(
-                    checkedAt: _emergencyStatus!.checkedAt,
-                    reason: _emergencyStatus!.emergencyReason,
-                    status: _emergencyStatus!.emergencyStatus,
-                    onTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => EmergencyDetailPage(checkInId: _emergencyStatus!.id),
-                        ),
-                      );
-                    },
-                  ),
-                ],
-                const SizedBox(height: 16),
-                WorkInfoCard(
-                  department: _profileDetail?.department ?? '-',
-                  position: _profileDetail?.position ?? _profile?.position ?? _profile?.employmentStatus ?? 'Pegawai',
-                  shiftTodayName: _profileDetail?.shiftTodayName,
-                  shiftTodayTime: _profileDetail?.shiftTodayTime,
-                  shiftTomorrowName: _profileDetail?.shiftTomorrowName,
-                  shiftTomorrowTime: _profileDetail?.shiftTomorrowTime,
-                ),
-                const SizedBox(height: 16),
-                StatGrid(counts: _statusCounts),
-                const SizedBox(height: 24),
-              ],
+        child: Column(
+          children: [
+            DashboardHeader(
+              name: _profile?.name ?? _profile?.username ?? '-',
+              role: _profile?.position ?? _profile?.employmentStatus ?? '-',
+              profession: _profileDetail?.profession,
+              photoUrl: _profile?.photoUrl,
             ),
-          ),
+            Expanded(
+              child: RefreshIndicator(
+                onRefresh: _loadData,
+                child: SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 16),
+                      QuickMenuGrid(
+                        items: [
+                          QuickMenuItem(
+                            icon: Icons.bolt_rounded,
+                            label: 'Presensi Darurat',
+                            accentColor: const Color(0xFFE0654B),
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(builder: (_) => const EmergencyCheckInPage()),
+                              );
+                            },
+                          ),
+                          QuickMenuItem(
+                            icon: Icons.event_note_rounded,
+                            label: 'Ajukan Cuti',
+                            accentColor: const Color(0xFF6B8E2F),
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(builder: (_) => const LeaveRequestFormPage()),
+                              );
+                            },
+                          ),
+                          QuickMenuItem(
+                            icon: Icons.calendar_month_rounded,
+                            label: 'Jadwal Shift',
+                            accentColor: const Color(0xFF0F5C48),
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(builder: (_) => const SchedulePage()),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      _isLoading
+                          ? const Padding(
+                        padding: EdgeInsets.all(24),
+                        child: CircularProgressIndicator(color: Colors.white),
+                      )
+                          : PresensiCard(
+                        dateLabel: _dateLabel,
+                        clockInTime: _todayAttendance?.checkInTime ?? '--:--',
+                        clockOutTime: _todayAttendance?.checkOutTime ?? '--:--',
+                        statusLabel: _statusLabel,
+                      ),
+                      if (!_isLoading && _ongoingLeave != null) ...[
+                        const SizedBox(height: 16),
+                        LeaveStatusCard(
+                          leaveTypeName: _ongoingLeave!.leaveTypeName,
+                          startDate: _ongoingLeave!.startDate,
+                          endDate: _ongoingLeave!.endDate,
+                          statusLabel: _leaveStatusLabel(_ongoingLeave!.status),
+                        ),
+                      ],
+                      if (!_isLoading &&
+                          _emergencyStatus != null &&
+                          _emergencyStatus!.emergencyStatus == 'pending') ...[
+                        const SizedBox(height: 16),
+                        EmergencyStatusCard(
+                          checkedAt: _emergencyStatus!.checkedAt,
+                          reason: _emergencyStatus!.emergencyReason,
+                          status: _emergencyStatus!.emergencyStatus,
+                          onTap: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => EmergencyDetailPage(checkInId: _emergencyStatus!.id),
+                              ),
+                            );
+                          },
+                        ),
+                      ],
+                      const SizedBox(height: 16),
+                      WorkInfoCard(
+                        department: _profileDetail?.department ?? '-',
+                        position: _profileDetail?.position ?? _profile?.position ?? _profile?.employmentStatus ?? 'Karyawan',
+                        scheduleToday: _profileDetail?.scheduleToday,
+                        scheduleTomorrow: _profileDetail?.scheduleTomorrow,
+                      ),
+                      const SizedBox(height: 16),
+                      StatGrid(counts: _statusCounts),
+                      const SizedBox(height: 24),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

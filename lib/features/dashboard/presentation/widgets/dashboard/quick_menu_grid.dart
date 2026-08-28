@@ -22,12 +22,14 @@ class QuickMenuGrid extends StatelessWidget {
   const QuickMenuGrid({super.key, required this.items});
 
   static const _teal = Color(0xFF0F5C48);
+  static const _olive = Color(0xFF6B8E2F);
+  static const _lime = Color(0xFFA9C23F);
 
   @override
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(18, 18, 18, 10),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
@@ -39,20 +41,49 @@ class QuickMenuGrid extends StatelessWidget {
           ),
         ],
       ),
-      child: GridView.builder(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        itemCount: items.length,
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 3,
-          mainAxisSpacing: 16,
-          crossAxisSpacing: 8,
-          childAspectRatio: 0.85,
-        ),
-        itemBuilder: (context, index) {
-          final item = items[index];
-          return _QuickMenuTile(item: item);
-        },
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 30,
+                height: 30,
+                decoration: BoxDecoration(
+                  color: _lime.withOpacity(0.18),
+                  borderRadius: BorderRadius.circular(9),
+                ),
+                alignment: Alignment.center,
+                child: const Icon(Icons.flash_on_rounded, color: _teal, size: 16),
+              ),
+              const SizedBox(width: 8),
+              const Text(
+                'Akses Cepat',
+                style: TextStyle(
+                  color: _teal,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: items.length,
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 3,
+              mainAxisSpacing: 16,
+              crossAxisSpacing: 8,
+              childAspectRatio: 0.85,
+            ),
+            itemBuilder: (context, index) {
+              final item = items[index];
+              return _QuickMenuTile(item: item);
+            },
+          ),
+        ],
       ),
     );
   }

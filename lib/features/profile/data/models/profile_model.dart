@@ -1,6 +1,22 @@
 import '../../domain/entities/profile_entity.dart';
 
-class ProfileModel extends ProfileEntity{
+class ScheduleStatusModel extends ScheduleStatusEntity {
+  const ScheduleStatusModel({
+    required super.isLibur,
+    super.shiftName,
+    super.shiftTime,
+  });
+
+  factory ScheduleStatusModel.fromJson(Map<String, dynamic> json) {
+    return ScheduleStatusModel(
+      isLibur: json['is_libur'] as bool? ?? false,
+      shiftName: json['shift_name'] as String?,
+      shiftTime: json['shift_time'] as String?,
+    );
+  }
+}
+
+class ProfileModel extends ProfileEntity {
   const ProfileModel({
     required super.id,
     required super.username,
@@ -21,12 +37,10 @@ class ProfileModel extends ProfileEntity{
     super.hireDate,
     super.position,
     super.department,
-    super.shiftTodayName,
-    super.shiftTodayTime,
-    super.shiftTomorrowName,
-    super.shiftTomorrowTime,
+    super.scheduleToday,
+    super.scheduleTomorrow,
     required super.isActive,
-});
+  });
 
   factory ProfileModel.fromJson(Map<String, dynamic> json) {
     return ProfileModel(
@@ -49,10 +63,12 @@ class ProfileModel extends ProfileEntity{
       hireDate: json['hire_date'] as String?,
       position: json['position'] as String?,
       department: json['department'] as String?,
-      shiftTodayName: json['shift_today_name'] as String?,
-      shiftTodayTime: json['shift_today_time'] as String?,
-      shiftTomorrowName: json['shift_tomorrow_name'] as String?,
-      shiftTomorrowTime: json['shift_tomorrow_time'] as String?,
+      scheduleToday: json['schedule_today'] != null
+          ? ScheduleStatusModel.fromJson(json['schedule_today'] as Map<String, dynamic>)
+          : null,
+      scheduleTomorrow: json['schedule_tomorrow'] != null
+          ? ScheduleStatusModel.fromJson(json['schedule_tomorrow'] as Map<String, dynamic>)
+          : null,
       isActive: json['is_active'] as bool? ?? true,
     );
   }
