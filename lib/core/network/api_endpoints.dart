@@ -3,7 +3,7 @@ class ApiEndpoints {
 
   // static const String baseUrl = 'http://10.0.2.2:8000/api/v1';
 
-  static const String baseUrl = 'http://10.145.202.31:8000/api/v1';
+  static const String baseUrl = 'http://10.18.2.161:8000/api/v1';
 
   static const String logout = '/logout';
   static const String login = '/login';
@@ -19,4 +19,6 @@ class ApiEndpoints {
   static const String emergencyCheckInToday = '/attendance/emergency-check-in/today';
   static const String emergencyCheckInHistory = '/attendance/emergency-check-in/history';
   static const String scheduleMe = '/schedule/me';
+  static const String spLetters = '/sp-letters';
+  static const String spLettersUnreadCount = '/sp-letters/unread-count';
 }

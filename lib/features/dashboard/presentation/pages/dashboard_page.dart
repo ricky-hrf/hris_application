@@ -35,6 +35,10 @@ import '../widgets/dashboard/work_info_card.dart';
 import '../widgets/dashboard/quick_menu_grid.dart';
 import '../../../presensi/presentation/pages/emergency_check_in_page.dart';
 import '../../../schedule/presentation/pages/schedule_page.dart';
+import '../../../notification//data/datasources/sp_letter_remote_datasource.dart';
+import '../../../notification//data/repositories/sp_letter_repository_impl.dart';
+import '../../../notification//domain/usecases/get_sp_letter_unread_count_usecase.dart';
+import '../../../notification//presentation/pages/sp_letter_list_page.dart';
 
 class DashboardPage extends StatefulWidget {
   final VoidCallback? onNavigateToProfile;
@@ -52,6 +56,8 @@ class _DashboardPageState extends State<DashboardPage> {
   late final GetAttendanceHistoryUseCase _getAttendanceHistoryUseCase;
   late final GetMyLeaveRequestsUseCase _getMyLeaveRequestsUseCase;
   late final GetTodayEmergencyStatusUseCase _getTodayEmergencyStatusUseCase;
+  late final GetSpLetterUnreadCountUseCase _getSpLetterUnreadCountUseCase;
+  int _spLetterUnreadCount = 0;
 
   bool _isLoading = true;
   AttendanceTodayEntity? _todayAttendance;
@@ -78,6 +84,7 @@ class _DashboardPageState extends State<DashboardPage> {
     final leaveRepository = LeaveRepositoryImpl(LeaveRemoteDataSourceImpl(client));
     final ProfileRepository profileRepository =
     ProfileRepositoryImpl(ProfileRemoteDataSourceImpl(client));
+    final spLetterRepository = SpLetterRepositoryImpl(SpLetterRemoteDataSourceImpl(client));
 
     _getTodayAttendanceUseCase = GetTodayAttendanceUseCase(attendanceRepository);
     _getProfileUseCase = GetProfileUseCase(authRepository);
@@ -85,6 +92,7 @@ class _DashboardPageState extends State<DashboardPage> {
     _getAttendanceHistoryUseCase = GetAttendanceHistoryUseCase(attendanceRepository);
     _getMyLeaveRequestsUseCase = GetMyLeaveRequestsUseCase(leaveRepository);
     _getTodayEmergencyStatusUseCase = GetTodayEmergencyStatusUseCase(attendanceRepository);
+    _getSpLetterUnreadCountUseCase = GetSpLetterUnreadCountUseCase(spLetterRepository);
 
     _loadData();
   }
@@ -104,6 +112,7 @@ class _DashboardPageState extends State<DashboardPage> {
         _getAttendanceHistoryUseCase(startDate: startDate, endDate: endDate),
         _getMyLeaveRequestsUseCase(),
         _getProfileDetailUseCase(),
+        _getSpLetterUnreadCountUseCase(),
       ]);
 
       if (mounted) {
@@ -133,6 +142,7 @@ class _DashboardPageState extends State<DashboardPage> {
           _statusCounts = counts;
           _ongoingLeave = ongoing;
           _profileDetail = results[4] as ProfileEntity;
+          _spLetterUnreadCount = results[5] as int;
         });
       }
     } catch (e) {
@@ -205,6 +215,13 @@ class _DashboardPageState extends State<DashboardPage> {
               role: _profile?.position ?? _profile?.employmentStatus ?? '-',
               profession: _profileDetail?.profession,
               photoUrl: _profile?.photoUrl,
+              spLetterUnreadCount: _spLetterUnreadCount,
+              onNotificationTap: () async {
+                await Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const SpLetterListPage()),
+                );
+                _loadData();
+              },
             ),
             Expanded(
               child: RefreshIndicator(
