@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hris_application/core/widgets/skeleton_box.dart';
 import 'check_time_box.dart';
 
 class PresensiCard extends StatelessWidget {
@@ -6,6 +7,7 @@ class PresensiCard extends StatelessWidget {
   final String clockInTime;
   final String clockOutTime;
   final String statusLabel;
+  final bool isLoading;
 
   const PresensiCard({
     super.key,
@@ -13,6 +15,7 @@ class PresensiCard extends StatelessWidget {
     this.clockInTime = '--:--',
     this.clockOutTime = '--:--',
     this.statusLabel = 'Belum Presensi',
+    this.isLoading = false,
   });
 
   @override
@@ -67,7 +70,9 @@ class PresensiCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 18),
-          Row(
+          isLoading
+              ? const _CheckTimeSkeletonRow()
+              : Row(
             children: [
               Expanded(
                 child: CheckTimeBox(
@@ -91,7 +96,9 @@ class PresensiCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-          Container(
+          isLoading
+              ? const _StatusSkeleton()
+              : Container(
             width: double.infinity,
             padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
             decoration: BoxDecoration(
@@ -124,6 +131,46 @@ class PresensiCard extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _CheckTimeSkeletonRow extends StatelessWidget {
+  const _CheckTimeSkeletonRow();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Row(
+      children: [
+        Expanded(
+          child: SkeletonBox(
+            width: double.infinity,
+            height: 88,
+            borderRadius: BorderRadius.all(Radius.circular(14)),
+          ),
+        ),
+        SizedBox(width: 12),
+        Expanded(
+          child: SkeletonBox(
+            width: double.infinity,
+            height: 88,
+            borderRadius: BorderRadius.all(Radius.circular(14)),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _StatusSkeleton extends StatelessWidget {
+  const _StatusSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return const SkeletonBox(
+      width: double.infinity,
+      height: 44,
+      borderRadius: BorderRadius.all(Radius.circular(14)),
     );
   }
 }

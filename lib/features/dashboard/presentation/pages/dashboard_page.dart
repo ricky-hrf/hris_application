@@ -216,6 +216,7 @@ class _DashboardPageState extends State<DashboardPage> {
               profession: _profileDetail?.profession,
               photoUrl: _profile?.photoUrl,
               spLetterUnreadCount: _spLetterUnreadCount,
+              isLoading: _isLoading,
               onNotificationTap: () async {
                 await Navigator.of(context).push(
                   MaterialPageRoute(builder: (_) => const SpLetterListPage()),
@@ -266,16 +267,12 @@ class _DashboardPageState extends State<DashboardPage> {
                         ],
                       ),
                       const SizedBox(height: 16),
-                      _isLoading
-                          ? const Padding(
-                        padding: EdgeInsets.all(24),
-                        child: CircularProgressIndicator(color: Colors.white),
-                      )
-                          : PresensiCard(
+                      PresensiCard(
                         dateLabel: _dateLabel,
                         clockInTime: _todayAttendance?.checkInTime ?? '--:--',
                         clockOutTime: _todayAttendance?.checkOutTime ?? '--:--',
                         statusLabel: _statusLabel,
+                        isLoading: _isLoading,
                       ),
                       if (!_isLoading && _ongoingLeave != null) ...[
                         const SizedBox(height: 16),
@@ -309,6 +306,7 @@ class _DashboardPageState extends State<DashboardPage> {
                         position: _profileDetail?.position ?? _profile?.position ?? _profile?.employmentStatus ?? 'Karyawan',
                         scheduleToday: _profileDetail?.scheduleToday,
                         scheduleTomorrow: _profileDetail?.scheduleTomorrow,
+                        isLoading: _isLoading,
                       ),
                       const SizedBox(height: 16),
                       StatGrid(counts: _statusCounts),

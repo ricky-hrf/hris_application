@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hris_application/core/widgets/skeleton_box.dart';
 
 class DashboardHeader extends StatelessWidget {
   final String name;
@@ -7,6 +8,7 @@ class DashboardHeader extends StatelessWidget {
   final String? photoUrl;
   final int spLetterUnreadCount;
   final VoidCallback? onNotificationTap;
+  final bool isLoading;
 
   const DashboardHeader({
     super.key,
@@ -16,6 +18,7 @@ class DashboardHeader extends StatelessWidget {
     this.photoUrl,
     this.spLetterUnreadCount = 0,
     this.onNotificationTap,
+    this.isLoading = false,
   });
 
   String get _greetingWord {
@@ -55,55 +58,14 @@ class DashboardHeader extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            padding: const EdgeInsets.all(2.5),
-            decoration: const BoxDecoration(
-              shape: BoxShape.circle,
-              color: Color(0xFFA9C23F),
-            ),
-            child: CircleAvatar(
-              radius: 28,
-              backgroundColor: const Color(0xFFF7FAF9),
-              backgroundImage: photoUrl != null
-                  ? NetworkImage(photoUrl!)
-                  : const AssetImage('assets/images/profil.jpg') as ImageProvider,
-            ),
-          ),
+          _Avatar(isLoading: isLoading, photoUrl: photoUrl),
           const SizedBox(width: 16),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Icon(_greetingIcon, color: const Color(0xFF6B8E2F), size: 16),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: Text(
-                        '$_greetingWord $_firstName,',
-                        style: const TextStyle(
-                          color: Color(0xFF0F5C48),
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
-                if (profession != null && profession!.isNotEmpty) ...[
-                  const SizedBox(height: 4),
-                  Text(
-                    profession!,
-                    style: const TextStyle(
-                      color: Color(0xFF6B8E2F),
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ],
+            child: isLoading ? const _HeaderTextSkeleton() : _HeaderText(
+              greetingIcon: _greetingIcon,
+              greetingWord: _greetingWord,
+              firstName: _firstName,
+              profession: profession,
             ),
           ),
           _NotificationBell(
@@ -112,6 +74,134 @@ class DashboardHeader extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _Avatar extends StatelessWidget {
+  final bool isLoading;
+  final String? photoUrl;
+
+  const _Avatar({required this.isLoading, this.photoUrl});
+
+  static const _lime = Color(0xFFA9C23F);
+  static const _radius = 28.0;
+
+  @override
+  Widget build(BuildContext context) {
+    if (isLoading) {
+      return const Padding(
+        padding: EdgeInsets.all(2.5),
+        child: SkeletonBox.circle(diameter: _radius * 2),
+      );
+    }
+
+    final hasPhoto = photoUrl != null && photoUrl!.isNotEmpty;
+
+    return Container(
+      padding: const EdgeInsets.all(2.5),
+      decoration: const BoxDecoration(
+        shape: BoxShape.circle,
+        color: _lime,
+      ),
+      child: ClipOval(
+        child: SizedBox(
+          width: _radius * 2,
+          height: _radius * 2,
+          child: hasPhoto
+              ? Image.network(
+            photoUrl!,
+            fit: BoxFit.cover,
+            loadingBuilder: (context, child, progress) {
+              if (progress == null) return child;
+              return const SkeletonBox.circle(diameter: _radius * 2);
+            },
+            errorBuilder: (context, error, stackTrace) => Image.asset(
+              'assets/images/profil.jpg',
+              fit: BoxFit.cover,
+            ),
+          )
+              : Image.asset(
+            'assets/images/profil.jpg',
+            fit: BoxFit.cover,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _HeaderText extends StatelessWidget {
+  final IconData greetingIcon;
+  final String greetingWord;
+  final String firstName;
+  final String? profession;
+
+  const _HeaderText({
+    required this.greetingIcon,
+    required this.greetingWord,
+    required this.firstName,
+    this.profession,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(greetingIcon, color: const Color(0xFF6B8E2F), size: 15),
+            const SizedBox(width: 5),
+            Text(
+              greetingWord,
+              style: const TextStyle(
+                color: Color(0xFF6B8E2F),
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Text(
+          firstName,
+          style: const TextStyle(
+            color: Color(0xFF0F5C48),
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        if (profession != null && profession!.isNotEmpty) ...[
+          const SizedBox(height: 4),
+          Text(
+            profession!,
+            style: const TextStyle(
+              color: Color(0xFF6B8E2F),
+              fontSize: 14,
+              fontWeight: FontWeight.w400,
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+class _HeaderTextSkeleton extends StatelessWidget {
+  const _HeaderTextSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: const [
+        SkeletonBox(width: 90, height: 13, borderRadius: BorderRadius.all(Radius.circular(6))),
+        SizedBox(height: 8),
+        SkeletonBox(width: 140, height: 22, borderRadius: BorderRadius.all(Radius.circular(6))),
+        SizedBox(height: 8),
+        SkeletonBox(width: 100, height: 14, borderRadius: BorderRadius.all(Radius.circular(6))),
+      ],
     );
   }
 }

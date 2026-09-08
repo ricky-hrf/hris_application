@@ -128,7 +128,7 @@ class _LoginPageState extends State<LoginPage> {
                       ],
                     ),
                     child: Image.asset(
-                      'assets/images/logo.jpeg',
+                      'assets/icon/logo.png',
                       fit: BoxFit.contain,
                     ),
                   ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hris_application/core/widgets/skeleton_box.dart';
 import '../../../../profile/domain/entities/profile_entity.dart';
 
 class WorkInfoCard extends StatelessWidget {
@@ -6,6 +7,7 @@ class WorkInfoCard extends StatelessWidget {
   final String position;
   final ScheduleStatusEntity? scheduleToday;
   final ScheduleStatusEntity? scheduleTomorrow;
+  final bool isLoading;
 
   const WorkInfoCard({
     super.key,
@@ -13,6 +15,7 @@ class WorkInfoCard extends StatelessWidget {
     required this.position,
     this.scheduleToday,
     this.scheduleTomorrow,
+    this.isLoading = false,
   });
 
   static const _teal = Color(0xFF0F5C48);
@@ -39,13 +42,17 @@ class WorkInfoCard extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _InfoTile(icon: Icons.apartment_rounded, label: 'Departemen', value: department),
+              isLoading
+                  ? const _InfoTileSkeleton()
+                  : _InfoTile(icon: Icons.apartment_rounded, label: 'Departemen', value: department),
               Container(
                 width: 1,
                 margin: const EdgeInsets.symmetric(horizontal: 14),
                 color: _teal.withOpacity(0.10),
               ),
-              _InfoTile(icon: Icons.badge_rounded, label: 'Posisi', value: position),
+              isLoading
+                  ? const _InfoTileSkeleton()
+                  : _InfoTile(icon: Icons.badge_rounded, label: 'Posisi', value: position),
             ],
           ),
           Padding(
@@ -56,7 +63,9 @@ class WorkInfoCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
-                child: _ShiftTile(
+                child: isLoading
+                    ? const _ShiftTileSkeleton()
+                    : _ShiftTile(
                   icon: Icons.wb_sunny_rounded,
                   label: 'Shift Hari Ini',
                   isLibur: scheduleToday?.isLibur ?? false,
@@ -66,7 +75,9 @@ class WorkInfoCard extends StatelessWidget {
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: _ShiftTile(
+                child: isLoading
+                    ? const _ShiftTileSkeleton()
+                    : _ShiftTile(
                   icon: Icons.event_rounded,
                   label: 'Shift Besok',
                   isLibur: scheduleTomorrow?.isLibur ?? false,
@@ -119,6 +130,37 @@ class _InfoTile extends StatelessWidget {
                   value,
                   style: const TextStyle(color: Color(0xFF0F5C48), fontSize: 13.5, fontWeight: FontWeight.w700),
                 ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _InfoTileSkeleton extends StatelessWidget {
+  const _InfoTileSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SkeletonBox(
+            width: 34,
+            height: 34,
+            borderRadius: BorderRadius.all(Radius.circular(10)),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: const [
+                SkeletonBox(width: 60, height: 11, borderRadius: BorderRadius.all(Radius.circular(4))),
+                SizedBox(height: 5),
+                SkeletonBox(width: 85, height: 13.5, borderRadius: BorderRadius.all(Radius.circular(4))),
               ],
             ),
           ),
@@ -196,6 +238,38 @@ class _ShiftTile extends StatelessWidget {
               ),
             ),
           ],
+        ],
+      ),
+    );
+  }
+}
+
+class _ShiftTileSkeleton extends StatelessWidget {
+  const _ShiftTileSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF7FAF9),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: const [
+          Row(
+            children: [
+              SkeletonBox(width: 14, height: 14, borderRadius: BorderRadius.all(Radius.circular(4))),
+              SizedBox(width: 6),
+              SkeletonBox(width: 70, height: 11, borderRadius: BorderRadius.all(Radius.circular(4))),
+            ],
+          ),
+          SizedBox(height: 6),
+          SkeletonBox(width: 60, height: 13, borderRadius: BorderRadius.all(Radius.circular(4))),
+          SizedBox(height: 4),
+          SkeletonBox(width: 80, height: 11.5, borderRadius: BorderRadius.all(Radius.circular(4))),
         ],
       ),
     );
