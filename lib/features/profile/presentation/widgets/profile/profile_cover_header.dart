@@ -11,7 +11,6 @@ class ProfileCoverHeader extends StatelessWidget {
   final File? pickedPhoto;
   final bool isUploadingPhoto;
   final VoidCallback onTapAvatar;
-  final VoidCallback? onTapPreview;
 
   const ProfileCoverHeader({
     super.key,
@@ -24,10 +23,8 @@ class ProfileCoverHeader extends StatelessWidget {
     this.pickedPhoto,
     this.isUploadingPhoto = false,
     required this.onTapAvatar,
-    this.onTapPreview,
   });
 
-  static const _lime = Color(0xFFA9C23F);
   static const heroTag = 'profile-avatar-hero';
 
   @override
@@ -41,93 +38,66 @@ class ProfileCoverHeader extends StatelessWidget {
       avatarImage = const AssetImage('assets/images/profil.jpg');
     }
 
-    final hasRealPhoto = pickedPhoto != null || (photoUrl != null && photoUrl!.isNotEmpty);
-
     return Column(
       children: [
-        Stack(
-          clipBehavior: Clip.none,
-          alignment: Alignment.bottomCenter,
-          children: [
-            Container(
-              width: double.infinity,
-              height: 128,
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    Color(0xFF042A22),
-                    Color(0xFF0F5C48),
-                    Color(0xFF1B7A5C),
-                  ],
-                  stops: [0.0, 0.55, 1.0],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
+        SizedBox(
+          height: 128 + 44,
+          child: Stack(
+            clipBehavior: Clip.none,
+            alignment: Alignment.topCenter,
+            children: [
+              Container(
+                width: double.infinity,
+                height: 128,
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Color(0xFF042A22),
+                      Color(0xFF0F5C48),
+                      Color(0xFF1B7A5C),
+                    ],
+                    stops: [0.0, 0.55, 1.0],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
                 ),
               ),
-            ),
-            Positioned(
-              bottom: -44,
-              child: SizedBox(
-                width: 100,
-                height: 100,
-                child: Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    // Avatar (area sentuh untuk preview/ganti foto)
-                    GestureDetector(
-                      onTap: hasRealPhoto && !isUploadingPhoto ? onTapPreview : onTapAvatar,
-                      child: Container(
-                        padding: const EdgeInsets.all(3),
-                        decoration: const BoxDecoration(shape: BoxShape.circle, color: Colors.white),
-                        child: Hero(
-                          tag: heroTag,
-                          child: CircleAvatar(
-                            radius: 44,
-                            backgroundColor: const Color(0xFFF7FAF9),
-                            backgroundImage: avatarImage,
-                            child: isUploadingPhoto
-                                ? Container(
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: Colors.black.withOpacity(0.4),
-                              ),
-                              alignment: Alignment.center,
-                              child: const SizedBox(
-                                width: 22,
-                                height: 22,
-                                child: CircularProgressIndicator(strokeWidth: 2.4, color: Colors.white),
-                              ),
-                            )
-                                : null,
+              Positioned(
+                top: 128 - 44,
+                child: GestureDetector(
+                  onTap: onTapAvatar,
+                  child: Container(
+                    padding: const EdgeInsets.all(3),
+                    decoration: const BoxDecoration(shape: BoxShape.circle, color: Colors.white),
+                    child: Hero(
+                      tag: heroTag,
+                      child: CircleAvatar(
+                        radius: 44,
+                        backgroundColor: const Color(0xFFF7FAF9),
+                        backgroundImage: avatarImage,
+                        child: isUploadingPhoto
+                            ? Container(
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.black.withOpacity(0.4),
                           ),
-                        ),
+                          alignment: Alignment.center,
+                          child: const SizedBox(
+                            width: 22,
+                            height: 22,
+                            child: CircularProgressIndicator(strokeWidth: 2.4, color: Colors.white),
+                          ),
+                        )
+                            : null,
                       ),
                     ),
-                    // Badge kamera — sibling terpisah, jadi area sentuhnya independen
-                    Positioned(
-                      bottom: 2,
-                      right: 2,
-                      child: Material(
-                        color: Colors.transparent,
-                        shape: const CircleBorder(),
-                        clipBehavior: Clip.hardEdge,
-                        child: InkWell(
-                          onTap: onTapAvatar,
-                          child: Container(
-                            padding: const EdgeInsets.all(6),
-                            decoration: const BoxDecoration(color: _lime, shape: BoxShape.circle),
-                            child: const Icon(Icons.camera_alt_rounded, color: Color(0xFF0F5C48), size: 15),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
-        const SizedBox(height: 52),
+        const SizedBox(height: 8),
         Text(
           name,
           textAlign: TextAlign.center,

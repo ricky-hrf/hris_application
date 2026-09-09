@@ -3,11 +3,13 @@ import 'package:flutter/material.dart';
 class PhotoViewerPage extends StatelessWidget {
   final ImageProvider image;
   final String heroTag;
+  final VoidCallback? onEdit;
 
   const PhotoViewerPage({
     super.key,
     required this.image,
     required this.heroTag,
+    this.onEdit,
   });
 
   @override
@@ -49,6 +51,19 @@ class PhotoViewerPage extends StatelessWidget {
                         ),
                       ),
                     ),
+                    if (onEdit != null)
+                      IconButton(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                          onEdit!();
+                        },
+                        icon: const Icon(Icons.edit_rounded, color: Colors.white, size: 22),
+                        style: IconButton.styleFrom(
+                          backgroundColor: Colors.black.withOpacity(0.35),
+                          shape: const CircleBorder(),
+                        ),
+                      ),
+                    const SizedBox(width: 8),
                     IconButton(
                       onPressed: () => Navigator.of(context).pop(),
                       icon: const Icon(Icons.close_rounded, color: Colors.white, size: 26),

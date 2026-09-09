@@ -105,15 +105,19 @@ class _ProfilePageState extends State<ProfilePage> {
 
   void _previewAvatar() {
     final photoUrl = _profile?.photoUrl;
-    if (photoUrl == null || photoUrl.isEmpty) return;
+
+    final ImageProvider image = (photoUrl != null && photoUrl.isNotEmpty)
+        ? NetworkImage(photoUrl)
+        : const AssetImage('assets/images/profil.jpg');
 
     Navigator.of(context).push(
       PageRouteBuilder(
         opaque: false,
         barrierColor: Colors.black,
         pageBuilder: (_, __, ___) => PhotoViewerPage(
-          image: NetworkImage(photoUrl),
+          image: image,
           heroTag: ProfileCoverHeader.heroTag,
+          onEdit: _changeAvatar,
         ),
       ),
     );
@@ -333,8 +337,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   photoUrl: _profile!.photoUrl,
                   pickedPhoto: _pickedPhotoPreview,
                   isUploadingPhoto: _isUploadingPhoto,
-                  onTapAvatar: _changeAvatar,
-                  onTapPreview: _previewAvatar,
+                  onTapAvatar: _previewAvatar,
                 ),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),

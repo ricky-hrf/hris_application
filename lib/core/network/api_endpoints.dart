@@ -5,7 +5,7 @@ class ApiEndpoints {
 
   // static const String baseUrl = 'https://ab.rskasihinsani.com/api/v1';
 
-  static const String baseUrl = 'http://10.18.28.6:8000/api/v1';
+  static const String baseUrl = 'http://10.18.2.42:8000/api/v1';
 
   static const String logout = '/logout';
   static const String login = '/login';

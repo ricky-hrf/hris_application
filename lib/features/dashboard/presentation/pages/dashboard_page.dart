@@ -39,6 +39,7 @@ import '../../../notification//data/datasources/sp_letter_remote_datasource.dart
 import '../../../notification//data/repositories/sp_letter_repository_impl.dart';
 import '../../../notification//domain/usecases/get_sp_letter_unread_count_usecase.dart';
 import '../../../notification//presentation/pages/sp_letter_list_page.dart';
+import '../../../leave/presentation/pages/leave_page.dart';
 
 class DashboardPage extends StatefulWidget {
   final VoidCallback? onNavigateToProfile;
@@ -281,6 +282,11 @@ class _DashboardPageState extends State<DashboardPage> {
                           startDate: _ongoingLeave!.startDate,
                           endDate: _ongoingLeave!.endDate,
                           statusLabel: _leaveStatusLabel(_ongoingLeave!.status),
+                          onTap: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(builder: (_) => const LeavePage()),
+                            );
+                          },
                         ),
                       ],
                       if (!_isLoading &&
